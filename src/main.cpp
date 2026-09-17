@@ -2,122 +2,62 @@
 
 #include "sensores/dht22.h"
 #include "sensores/ldr.h"
-#include "sensores/encoder.h"
+#include "sensores/encoderAnemometro.h"
+#include "sensores/encoderBiruta.h"
 #include "atuadores/rgb.h"
 #include "display/lcd.h"
 
-
-unsigned long ultimaLeitura = 0;
-
-const unsigned long intervaloLeitura = 2000;
-
+unsigned long ultimaLeituraSensores = 0;
+const unsigned long intervaloSensores = 2000;
 
 void setup() {
-
     Serial.begin(115200);
 
     iniciarDHT22();
     iniciarLDR();
-    iniciarEncoder();
+    iniciarEncoderAnemometro();
+    iniciarEncoderBiruta();
     iniciarRGB();
     iniciarLCD();
 
-    Serial.println();
-    Serial.println("==============================");
-    Serial.println("       AEOLUS INICIADO");
-    Serial.println("==============================");
+    Serial.println("AEOLUS INICIANDO. . . ");
 }
-
 
 void loop() {
 
-    // Essa função precisa rodar o tempo inteiro
-    atualizarEncoder();
-
-
-    // Pega o tempo atual do ESP32
+    atualizarEncoderBiruta();
     unsigned long agora = millis();
-
-
-    // A cada 2 segundos, lê e mostra os outros sensores
-    if (agora - ultimaLeitura >= intervaloLeitura) {
-
-        ultimaLeitura = agora;
-
-
-        // Leitura dos sensores
-
+    if (agora - ultimaLeituraSensores >= intervaloSensores) {
         float temperatura = lerTemperatura();
-
         float umidade = lerUmidade();
-
         int luminosidade = lerLDR();
-
-        int posicao = obterPosicaoEncoder();
-
-        const char* direcao = obterDirecaoEncoder();
-
-
-        // Monitor Serial
+        float velocidade = obterVelocidadeAnemometro();
+        int angulo = obterAnguloBiruta();
+        const char * direcao = obterDirecaoBiruta();
 
         Serial.println();
-
-        Serial.println("----- DADOS DO AEOLUS -----");
-
-
+        Serial.println("----- LEITURA DOS SENSORES -----");
         Serial.print("Temperatura: ");
-
         Serial.print(temperatura);
-
         Serial.println(" C");
-
-
         Serial.print("Umidade: ");
-
         Serial.print(umidade);
-
         Serial.println(" %");
-
-
         Serial.print("Luminosidade: ");
-
         Serial.println(luminosidade);
-
-
-        Serial.print("Posicao do encoder: ");
-
-        Serial.println(posicao);
-
-
+        Serial.print("Velocidade do vento: ");
+        Serial.print(velocidade);
+        Serial.println(" km/h");
         Serial.print("Direcao do vento: ");
+        Serial.print(direcao);
+        Serial.print(" (");
+        Serial.print(angulo);
+        Serial.println(" graus)");
+        Serial.println("--------------------------------");
 
-        Serial.println(direcao);
+        mostrarDadosLCD(temperatura,umidade);
+        atualizarCorPelaVelocidade(velocidade);
 
-
-        // LCD
-
-        mostrarDadosLCD(
-            temperatura,
-            umidade
-        );
-
-
-        // RGB temporário baseado na temperatura
-
-        if (temperatura < 21) {
-
-            acenderAzul();
-
-        } else if (temperatura < 24) {
-
-            acenderVerde();
-
-        } else {
-
-            acenderVermelho();
-        }
-
-
-        Serial.println("---------------------------");
+        ultimaLeituraSensores = agora;
     }
-}ss
+}

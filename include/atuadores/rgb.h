@@ -1,10 +1,11 @@
 #ifndef RGB_H
 #define RGB_H
 
-void iniciarRGB(); //função que inicia o pino do RGB
+void iniciarRGB();
 void desligarRGB();
 void acenderVermelho();
 void acenderVerde();
 void acenderAzul();
+void atualizarCorPelaVelocidade(float velocidadeKmh);
 
-#endif //fecha a proteção do arquivo
+#endif
