@@ -10,4 +10,6 @@ include/credenciais.h
 # Sistema operacional
 .DS_Store
 Thumbs.db
-
+# Backend
+backend/node_modules/
+backend/.env
