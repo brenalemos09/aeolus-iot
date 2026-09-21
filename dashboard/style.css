@@ -84,14 +84,17 @@ body {
     color: #7b7d7c;
 
     font-size: 10px;
-    font-weight: 400;
+    font-weight: 500;
     letter-spacing: 2px;
 }
 
 
 .marca-vortex {
     color: var(--azul);
-    font-weight: 600;
+
+    font-weight: 800;
+
+    letter-spacing: 1.5px;
 }
 
 
@@ -112,7 +115,8 @@ body {
     color: var(--dourado);
 
     font-size: 10px;
-    font-weight: 500;
+    font-weight: 700;
+
     letter-spacing: 5px;
 }
 
@@ -126,11 +130,11 @@ body {
 
     font-size: clamp(65px, 7vw, 105px);
 
-    font-weight: 500;
+    font-weight: 800;
 
     line-height: 0.95;
 
-    letter-spacing: 15px;
+    letter-spacing: 12px;
 }
 
 
@@ -138,8 +142,9 @@ body {
     color: #4c5968;
 
     font-size: 12px;
-    font-weight: 400;
-    letter-spacing: 5px;
+    font-weight: 600;
+
+    letter-spacing: 4px;
 
     text-transform: uppercase;
 }
@@ -228,7 +233,7 @@ body {
     color: var(--azul);
 
     font-size: 11px;
-    font-weight: 600;
+    font-weight: 700;
 }
 
 
@@ -238,7 +243,7 @@ body {
     color: var(--texto-claro);
 
     font-size: 9px;
-    font-weight: 400;
+    font-weight: 500;
 }
 
 
@@ -308,7 +313,7 @@ body {
     color: var(--dourado);
 
     font-size: 11px;
-    font-weight: 500;
+    font-weight: 700;
 }
 
 
@@ -316,7 +321,8 @@ body {
     color: #8b8b87;
 
     font-size: 8px;
-    font-weight: 500;
+    font-weight: 600;
+
     letter-spacing: 1.5px;
 }
 
@@ -325,7 +331,7 @@ body {
     color: var(--azul);
 
     font-size: 10px;
-    font-weight: 600;
+    font-weight: 700;
 
     letter-spacing: 2px;
 
@@ -346,7 +352,7 @@ body {
     font-family: "Poppins", sans-serif;
 
     font-size: 48px;
-    font-weight: 500;
+    font-weight: 700;
 
     letter-spacing: -2px;
 }
@@ -354,7 +360,7 @@ body {
 
 .valor small {
     font-size: 14px;
-    font-weight: 400;
+    font-weight: 500;
 
     letter-spacing: 0;
 }
@@ -364,7 +370,7 @@ body {
     color: var(--texto-claro);
 
     font-size: 10px;
-    font-weight: 400;
+    font-weight: 500;
 }
 
 
@@ -381,7 +387,7 @@ body {
     color: var(--dourado);
 
     font-size: 16px;
-    font-weight: 600;
+    font-weight: 700;
 
     letter-spacing: 2px;
 
@@ -478,7 +484,7 @@ body {
     font-family: "Poppins", sans-serif;
 
     font-size: 10px;
-    font-weight: 600;
+    font-weight: 700;
 }
 
 
@@ -615,7 +621,7 @@ body {
     color: var(--azul);
 
     font-size: 16px;
-    font-weight: 600;
+    font-weight: 700;
 }
 
 
@@ -623,7 +629,7 @@ body {
     color: var(--dourado);
 
     font-size: 11px;
-    font-weight: 500;
+    font-weight: 600;
 }
 
 
@@ -669,7 +675,7 @@ body {
     color: var(--azul);
 
     font-size: 9px;
-    font-weight: 600;
+    font-weight: 700;
 }
 
 
@@ -679,6 +685,7 @@ body {
     color: var(--texto-claro);
 
     font-size: 8px;
+    font-weight: 500;
 }
 
 
@@ -688,7 +695,7 @@ body {
     color: var(--dourado);
 
     font-size: 7px;
-    font-weight: 500;
+    font-weight: 600;
 
     border: 1px solid #dfd4bc;
     border-radius: 3px;
@@ -722,7 +729,7 @@ body {
     color: var(--azul);
 
     font-size: 9px;
-    font-weight: 600;
+    font-weight: 700;
 
     letter-spacing: 2px;
 }
@@ -734,6 +741,7 @@ body {
     color: var(--texto-claro);
 
     font-size: 8px;
+    font-weight: 500;
 }
 
 
@@ -792,7 +800,7 @@ body {
     color: var(--azul);
 
     font-size: 10px;
-    font-weight: 600;
+    font-weight: 700;
 }
 
 
@@ -802,6 +810,7 @@ body {
     color: var(--texto-claro);
 
     font-size: 8px;
+    font-weight: 500;
 }
 
 
@@ -855,7 +864,7 @@ body {
     color: var(--dourado);
 
     font-size: 7px;
-    font-weight: 600;
+    font-weight: 700;
 
     letter-spacing: 2px;
 }
@@ -865,7 +874,7 @@ body {
     color: var(--azul);
 
     font-size: 17px;
-    font-weight: 600;
+    font-weight: 700;
 }
 
 
@@ -877,6 +886,7 @@ body {
     color: var(--texto-claro);
 
     font-size: 9px;
+    font-weight: 500;
 }
 
 
@@ -966,7 +976,7 @@ body {
     color: #a2a19c;
 
     font-size: 10px;
-    font-weight: 500;
+    font-weight: 600;
 }
 
 
@@ -994,7 +1004,7 @@ body {
     color: var(--azul);
 
     font-size: 11px;
-    font-weight: 600;
+    font-weight: 700;
 }
 
 
@@ -1006,6 +1016,7 @@ body {
     color: var(--texto-claro);
 
     font-size: 9px;
+    font-weight: 500;
 }
 
 
@@ -1013,7 +1024,7 @@ body {
     color: var(--verde);
 
     font-size: 8px;
-    font-weight: 500;
+    font-weight: 600;
 }
 
 
@@ -1056,7 +1067,7 @@ body {
     color: var(--azul);
 
     font-size: 15px;
-    font-weight: 600;
+    font-weight: 700;
 }
 
 
@@ -1064,6 +1075,7 @@ body {
     color: var(--texto-claro);
 
     font-size: 9px;
+    font-weight: 500;
 }
 
 
@@ -1080,7 +1092,7 @@ body {
     color: #8a8b88;
 
     font-size: 8px;
-    font-weight: 400;
+    font-weight: 500;
 
     letter-spacing: 2px;
 }
@@ -1096,7 +1108,7 @@ body {
 .rodape strong {
     color: var(--azul);
 
-    font-weight: 600;
+    font-weight: 800;
 }
 
 
