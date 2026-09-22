@@ -271,8 +271,7 @@ clienteMQTT.on(
 
             atualizarDashboard();
 
-            atualizarGrafico();
-
+            
 
         } catch (erro) {
 
@@ -552,58 +551,86 @@ function atualizarHorario() {
 // ATUALIZA O GRÁFICO
 // ==========================================
 
-function atualizarGrafico() {
+// ==========================================
+// CARREGA O HISTÓRICO DO POSTGRESQL
+// ==========================================
 
-    const agora =
-        new Date();
+async function carregarHistorico() {
 
+    try {
 
-    const horario =
-        agora.toLocaleTimeString(
-            "pt-BR",
-            {
-                hour: "2-digit",
-                minute: "2-digit",
-                second: "2-digit"
+        const resposta = await fetch(
+            "http://localhost:3000/api/leituras"
+        );
+
+        if (!resposta.ok) {
+            throw new Error(
+                "Não foi possível consultar a API."
+            );
+        }
+
+        const dados = await resposta.json();
+
+        const leituras = Array.isArray(dados)
+            ? dados
+            : dados.value || [];
+
+        const ultimasLeituras =
+            leituras.slice(-limiteHistorico);
+
+        horarios.length = 0;
+        historicoTemperatura.length = 0;
+        historicoUmidade.length = 0;
+        historicoVento.length = 0;
+
+        ultimasLeituras.forEach(
+            function (leitura) {
+
+                const data =
+                    new Date(leitura.criado_em);
+
+                const horario =
+                    data.toLocaleTimeString(
+                        "pt-BR",
+                        {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            second: "2-digit"
+                        }
+                    );
+
+                horarios.push(horario);
+
+                historicoTemperatura.push(
+                    Number(leitura.temperatura)
+                );
+
+                historicoUmidade.push(
+                    Number(leitura.umidade)
+                );
+
+                historicoVento.push(
+                    Number(leitura.velocidade)
+                );
             }
         );
 
+        graficoCondicoes.update();
 
-    horarios.push(
-        horario
-    );
+        console.log(
+            "Histórico carregado da API:",
+            ultimasLeituras.length,
+            "leituras"
+        );
 
-    historicoTemperatura.push(
-        Number(temperatura)
-    );
+    } catch (erro) {
 
-    historicoUmidade.push(
-        Number(umidade)
-    );
-
-    historicoVento.push(
-        Number(velocidade)
-    );
-
-
-    if (
-        horarios.length >
-        limiteHistorico
-    ) {
-
-        horarios.shift();
-
-        historicoTemperatura.shift();
-
-        historicoUmidade.shift();
-
-        historicoVento.shift();
+        console.log(
+            "Erro ao carregar histórico:",
+            erro.message
+        );
     }
-
-
-    graficoCondicoes.update();
 }
-
 
 // ==========================================
 // VERIFICA SE A ESP32 PAROU DE ENVIAR DADOS
@@ -638,3 +665,10 @@ setInterval(
 atualizarDashboard();
 
 atualizarStatusSistema(false);
+
+carregarHistorico();
+
+setInterval(
+    carregarHistorico,
+    5000
+);
