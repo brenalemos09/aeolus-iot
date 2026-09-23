@@ -2,31 +2,34 @@
 
 #include "sensores/encoderAnemometro.h"
 
-const int pinClkAnemometro = 18;  // D18
+const int pinClkAnemometro = 21;
 
-// constante física do anemômetro (arco percorrido a cada pulso)
+// Constante física do anemômetro.
+// Considera 20 pulsos por volta.
 const float raioAnemometro = 0.05;
-const float arcoPorPulso = (PI * raioAnemometro) / 10.0;
+const float arcoPorPulso =
+    (2.0 * PI * raioAnemometro) / 20.0;
 
-volatile int contadorPulsosAnemometro = 0;
+volatile unsigned long contadorPulsosAnemometro = 0;
 volatile unsigned long ultimoPulsoMicros = 0;
 
 unsigned long ultimoCalculoMs = 0;
-const unsigned long intervaloCalculoMs = 1000;
+const unsigned long intervaloMinimoCalculoMs = 1000;
 
 float velocidadeAtualKmh = 0;
 
 void IRAM_ATTR contarPulsoAnemometro() {
     unsigned long agora = micros();
 
-    if (agora - ultimoPulsoMicros > 6000) {
+    // Ignora pulsos ocorridos em menos de 5 ms.
+    if (agora - ultimoPulsoMicros > 5000) {
         contadorPulsosAnemometro++;
         ultimoPulsoMicros = agora;
     }
 }
 
 void iniciarEncoderAnemometro() {
-    pinMode(pinClkAnemometro, INPUT);
+    pinMode(pinClkAnemometro, INPUT_PULLUP);
 
     attachInterrupt(
         digitalPinToInterrupt(pinClkAnemometro),
@@ -34,26 +37,49 @@ void iniciarEncoderAnemometro() {
         FALLING
     );
 
-    Serial.println("Encoder do anemometro (velocidade) iniciado.");
+    ultimoCalculoMs = millis();
+
+    Serial.println(
+        "Encoder do anemometro (velocidade) iniciado."
+    );
 }
 
 void calcularVelocidadeAnemometro() {
     unsigned long agora = millis();
+    unsigned long tempoDecorridoMs =
+        agora - ultimoCalculoMs;
 
-    if (agora - ultimoCalculoMs >= intervaloCalculoMs) {
-        float pulsosPorSegundo =
-            contadorPulsosAnemometro / (intervaloCalculoMs / 1000.0);
+    if (
+        tempoDecorridoMs >=
+        intervaloMinimoCalculoMs
+    ) {
+        noInterrupts();
 
-        float velocidadeMs = pulsosPorSegundo * arcoPorPulso;
-
-        velocidadeAtualKmh = velocidadeMs * 3.6;
+        unsigned long pulsos =
+            contadorPulsosAnemometro;
 
         contadorPulsosAnemometro = 0;
+
+        interrupts();
+
+        float tempoDecorridoSegundos =
+            tempoDecorridoMs / 1000.0;
+
+        float pulsosPorSegundo =
+            pulsos / tempoDecorridoSegundos;
+
+        float velocidadeMs =
+            pulsosPorSegundo * arcoPorPulso;
+
+        velocidadeAtualKmh =
+            velocidadeMs * 3.6;
+
         ultimoCalculoMs = agora;
     }
 }
 
 float obterVelocidadeAnemometro() {
     calcularVelocidadeAnemometro();
+
     return velocidadeAtualKmh;
 }

@@ -2,8 +2,8 @@
 
 #include "atuadores/rgb.h"
 
-#define RED_PIN 25
-#define GREEN_PIN 26
+#define RED_PIN 26
+#define GREEN_PIN 25
 #define BLUE_PIN 33
 
 void iniciarRGB() {
