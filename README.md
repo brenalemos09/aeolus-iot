@@ -6,7 +6,7 @@ O **Desafio Aeolus** consiste no desenvolvimento de uma estação meteorológica
 
 O projeto é inspirado em **Aeolus (Éolo)**, figura da mitologia grega associada aos ventos, e reúne conceitos de IoT, sistemas embarcados, eletrônica, MQTT, banco de dados, desenvolvimento web, fabricação digital e PCB.
 
-> 🚧 Projeto em desenvolvimento.
+> 🚧 Projeto em fase final de montagem física e testes integrados.
 
 ---
 
@@ -30,17 +30,18 @@ As leituras também são armazenadas em um banco de dados PostgreSQL e apresenta
 
 ### Hardware
 
-- ESP32 DevKit V1;
-- Sensor DHT22;
-- Sensor de luminosidade LDR;
-- Display LCD 16x2 com interface I²C;
-- LED RGB;
-- Encoder do anemômetro;
-- Encoder da biruta;
-- Anemômetro fabricado por impressão 3D;
-- Biruta para direção do vento;
+- ESP32 DevKit V4;
+- Sensor DHT22 (temperatura e umidade);
+- Sensor de luminosidade LDR (módulo com saída `DO`);
+- Display LCD 16x2 com interface I²C (endereço `0x27`);
+- LED RGB (common-anode, lógica invertida);
+- Encoder rotativo KY-040 do anemômetro (velocidade);
+- Encoder rotativo KY-040 da biruta (direção);
+- Botão físico de calibração do Norte;
+- Anemômetro e biruta fabricados por impressão 3D;
+- Caixa "O Odre de Aeolus" impressa em 3D;
 - PCB artesanal;
-- Protoboard e componentes eletrônicos.
+- Protoboard (prototipagem) e componentes eletrônicos.
 
 ### Firmware
 
@@ -51,7 +52,8 @@ As leituras também são armazenadas em um banco de dados PostgreSQL e apresenta
 - MQTT;
 - JSON;
 - PubSubClient;
-- LiquidCrystal_I2C.
+- LiquidCrystal_I2C;
+- DHT sensor library.
 
 ### Backend e dashboard
 
@@ -70,6 +72,7 @@ As leituras também são armazenadas em um banco de dados PostgreSQL e apresenta
 - Git e GitHub;
 - PlatformIO;
 - VS Code;
+- KiCad (esquema e layout da PCB);
 - Fabricação e modelagem 3D;
 - Desenvolvimento de PCB.
 
@@ -77,16 +80,24 @@ As leituras também são armazenadas em um banco de dados PostgreSQL e apresenta
 
 ## 🔌 Pinagem consolidada
 
-| Componente | Função | GPIO |
-|---|---|---:|
-| LCD I²C | SDA | 13 |
-| LCD I²C | SCL | 14 |
-| Encoder do anemômetro | CLK | 21 |
-| LED RGB | Vermelho | 26 |
-| LED RGB | Verde | 25 |
-| LED RGB | Azul | 33 |
+Placa utilizada: **ESP32 DevKit V4**.
 
-> A pinagem dos demais componentes deve ser consultada diretamente nos arquivos do firmware enquanto o protótipo estiver em desenvolvimento.
+| Componente | Função | GPIO | Observação |
+|---|---|---:|---|
+| DHT22 | DATA | 4 | VCC em 3.3 V |
+| LDR (módulo) | DO | 35 | VCC em 3.3 V |
+| LED RGB | Vermelho | 26 | common-anode: `LOW` acende |
+| LED RGB | Verde | 25 | common-anode: `LOW` acende |
+| LED RGB | Azul | 33 | common-anode: `LOW` acende |
+| LCD I²C | SDA | 13 | VCC em 5 V, endereço `0x27` |
+| LCD I²C | SCL | 14 | `Wire.begin(13, 14)` |
+| Encoder do anemômetro | CLK | 21 | `INPUT_PULLUP`; DT e SW não são usados |
+| Encoder da biruta | CLK | 16 | VCC em 3.3 V |
+| Encoder da biruta | DT | 17 | |
+| Encoder da biruta | SW | 19 | ligado, sem função definida |
+| Botão de calibração | Sinal | 23 | `INPUT_PULLUP`, outra perna no GND |
+
+> Os GPIOs 13 e 14 (LCD) e 21 (anemômetro) foram escolhidos para facilitar o roteamento da PCB. O GPIO 12 foi evitado de propósito por ser um pino relacionado ao boot do ESP32.
 
 ---
 
@@ -109,7 +120,7 @@ A intensidade do vento é representada por quatro níveis:
 | Acima de 25 até 40 km/h | Noto | Laranja |
 | Acima de 40 km/h | Fúria de Bóreas | Vermelho |
 
-> Durante os testes do protótipo, podem ser utilizados valores reduzidos para facilitar a validação manual do LED RGB. Os limites oficiais devem ser aplicados após a calibração final do anemômetro.
+> Durante os testes do protótipo, foram utilizados valores reduzidos para facilitar a validação manual do LED RGB. Os limites oficiais devem ser aplicados após a calibração final do anemômetro.
 
 ### Templo de Aeolus
 
@@ -120,7 +131,7 @@ O dashboard da estação é denominado **Templo de Aeolus** e apresenta:
 - Umidade;
 - Luminosidade;
 - Velocidade do vento;
-- Direção e ângulo do vento;
+- Direção e ângulo do vento (com bússola);
 - Estado dos componentes e conexões;
 - Classificação da Escala Aeolus;
 - Gráfico com o histórico das últimas leituras.
@@ -151,6 +162,18 @@ API REST
    ↓
 Gráfico histórico do dashboard
 ```
+
+Os cartões do dashboard recebem os dados diretamente pelo MQTT (tempo real). O gráfico consulta a API, que lê o histórico do PostgreSQL, e se atualiza automaticamente a cada 5 segundos.
+
+---
+
+## 🧠 Como cada medição funciona
+
+- **Temperatura e umidade:** o DHT22 envia os dados por um único fio. A leitura inválida (`NaN`) é tratada e sinalizada no campo `statusDHT`.
+- **Luminosidade:** o LDR altera a tensão no pino analógico. O ESP32 converte essa tensão em um valor de 0 a 4095. Na montagem atual, menos luz resulta em valor maior.
+- **Velocidade do vento:** o encoder do anemômetro gera pulsos a cada giro. Uma interrupção conta os pulsos (com `INPUT_PULLUP` e filtro de 5 ms contra ruído) e a velocidade é calculada pelo tempo real decorrido entre eles.
+- **Direção do vento:** o encoder da biruta tem 20 passos por volta (18° cada). Com a biruta apontada para o Norte real, o botão de calibração salva a posição atual como referência (Norte = 0°). A partir daí, o ângulo é calculado de forma relativa e convertido em uma das 8 direções cardeais.
+- **LCD e RGB:** mostram os valores localmente. O RGB indica o nível da Escala Aeolus pela velocidade do vento.
 
 ---
 
@@ -184,11 +207,27 @@ O broker utilizado durante o desenvolvimento é:
 broker.hivemq.com
 ```
 
+Se o Wi-Fi não conectar dentro do tempo limite de tentativas, a estação continua funcionando localmente (sensores, LCD e RGB).
+
 ---
 
 ## 🗄️ Banco de dados e API
 
-O backend recebe as mensagens MQTT e armazena as leituras no PostgreSQL.
+O backend assina o tópico MQTT, valida os campos recebidos e grava cada leitura no PostgreSQL, na tabela `leituras_aeolus`:
+
+| Campo | Tipo |
+|---|---|
+| `id` | BIGINT (chave primária, automático) |
+| `temperatura` | NUMERIC(5,2) |
+| `umidade` | NUMERIC(5,2) |
+| `luminosidade` | INTEGER |
+| `velocidade` | NUMERIC(6,2) |
+| `angulo` | INTEGER |
+| `direcao` | VARCHAR(20) |
+| `status_dht` | BOOLEAN |
+| `criado_em` | TIMESTAMPTZ (automático) |
+
+Os campos `statusWiFi` e `statusMQTT` não são gravados: uma mensagem só chega ao backend se essas conexões estiverem funcionando.
 
 ### Endpoints
 
@@ -204,7 +243,7 @@ GET /api/status
 GET /api/leituras
 ```
 
-O endpoint de histórico retorna as últimas leituras registradas, organizadas em ordem cronológica para utilização no gráfico do dashboard.
+O endpoint de histórico retorna as últimas leituras registradas (no máximo 100), organizadas em ordem cronológica para utilização no gráfico do dashboard.
 
 ---
 
@@ -237,13 +276,37 @@ aeolus-iot/
 └── README.md
 ```
 
+Cada módulo do firmware segue o padrão `.h` (declaração) + `.cpp` (implementação). O `main.cpp` apenas coordena os módulos.
+
+---
+
+## 🔐 Arquivos privados (não versionados)
+
+Dois arquivos de configuração ficam fora do GitHub e precisam ser criados em cada computador:
+
+**`include/credenciais.h`** — rede Wi-Fi do ESP32:
+
+```cpp
+#ifndef CREDENCIAIS_H
+#define CREDENCIAIS_H
+
+#define WIFI_SSID "nome_da_rede"
+#define WIFI_SENHA "senha_da_rede"
+
+#endif
+```
+
+**`backend/.env`** — configurações do PostgreSQL, porta da API, broker e tópico MQTT.
+
+Ambos estão no `.gitignore`, assim como a pasta `backend/node_modules/`.
+
 ---
 
 ## ▶️ Execução
 
 ### Firmware do ESP32
 
-Abra o projeto no PlatformIO e execute:
+Crie o `include/credenciais.h`, abra o projeto no PlatformIO e execute:
 
 ```powershell
 platformio.exe run --target upload
@@ -265,7 +328,7 @@ Instale as dependências:
 npm install
 ```
 
-Inicie o servidor:
+Crie o arquivo `.env` e inicie o servidor:
 
 ```powershell
 node server.js
@@ -291,6 +354,29 @@ O dashboard pode ser executado utilizando uma extensão de servidor local, como 
 
 ---
 
+## 🧪 Testes de hardware
+
+Cada componente foi validado individualmente antes de entrar no firmware principal. Os testes ficam na pasta `testes-hardware/`, numerados na ordem em que foram feitos:
+
+1. comunicação serial do ESP32;
+2. DHT22, LDR, LED RGB e LCD I²C;
+3. encoder da biruta: giro, botão, posição, calibração do Norte e direção cardinal;
+4. encoder do anemômetro: contagem de pulsos com filtro de ruído;
+5. integração dos dois encoders;
+6. Wi-Fi e integração dos componentes com Wi-Fi e MQTT.
+
+Metodologia: componente → código simples de teste → Serial Monitor → teste físico → registro do resultado → só então integração ao firmware.
+
+---
+
+## 🌿 Fluxo de versionamento
+
+- `main`: versão estável;
+- `develop`: integração do desenvolvimento;
+- `feature/...`: uma branch por funcionalidade, integrada à `develop` após validação.
+
+---
+
 ## ✅ Funcionalidades validadas
 
 - [x] Leitura de temperatura e umidade;
@@ -305,7 +391,8 @@ O dashboard pode ser executado utilizando uma extensão de servidor local, como 
 - [x] Armazenamento das leituras no PostgreSQL;
 - [x] API para consulta do histórico;
 - [x] Dashboard em tempo real;
-- [x] Gráfico com dados históricos.
+- [x] Gráfico com dados históricos;
+- [x] PCB artesanal fabricada e componentes soldados.
 
 ---
 
@@ -316,9 +403,20 @@ O dashboard pode ser executado utilizando uma extensão de servidor local, como 
 - [ ] Definir o intervalo definitivo de armazenamento das leituras;
 - [ ] Realizar teste integrado prolongado;
 - [ ] Melhorar o tratamento de reconexão do Wi-Fi e MQTT;
-- [ ] Finalizar o case e a montagem física;
-- [ ] Finalizar e validar a PCB;
-- [ ] Integrar a branch de desenvolvimento após a revisão final.
+- [ ] Testar todos os componentes na PCB já instalada dentro da caixa;
+- [ ] Finalizar a impressão da base da caixa, do anemômetro e da biruta;
+- [ ] Integrar a branch de desenvolvimento à `develop` após a revisão final.
+
+---
+
+## 📚 Desafios e aprendizados
+
+- **Brownout no Wi-Fi:** três placas ESP32 DevKit V1 reiniciavam (`Brownout detector was triggered`) ao iniciar o Wi-Fi, mesmo trocando cabo, porta USB e fonte. O regulador de tensão dessas placas não suportava o pico de corrente do rádio. A troca para a DevKit V4 resolveu. Os GPIOs usados são os mesmos nas duas placas.
+- **Ruído mecânico nos encoders (bounce):** pulsos falsos inflavam a velocidade calculada. A solução foi um filtro por tempo mínimo entre pulsos, calibrado na prática, junto com `INPUT_PULLUP`.
+- **Escala de teste × vento real:** com giro manual a velocidade ficou baixa demais para ver todas as cores do RGB, então os limites foram reduzidos temporariamente nos testes.
+- **PCB artesanal:** foram necessárias quatro tentativas, com problemas em etapas diferentes (desenho das trilhas, corte, corrosão, furação e solda). A quarta placa funcionou.
+- **Impressão 3D:** mais de dez impressões falharam, e uma das impressoras entupiu durante o processo.
+- **Segurança de credenciais:** senha do Wi-Fi e configurações do banco ficam em arquivos fora do Git (`credenciais.h` e `.env`).
 
 ---
 
