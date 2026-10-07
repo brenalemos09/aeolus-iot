@@ -1,199 +1,323 @@
-// ==========================================
-// AEOLUS - DASHBOARD
-// VORTEX LAB
-// ==========================================
+const dadosAtuais = {
+    temperatura: null,
+    umidade: null,
+    luminosidade: null,
+    velocidade: null,
+    direcao: "Norte",
+    angulo: 0,
+    statusDHT: false
+};
 
+const broker = "wss://broker.hivemq.com:8884/mqtt";
+const topico = "aeolus/sensor/dados";
+const limiteOffline = 7000;
+const limiteHistorico = 30;
 
-// ==========================================
-// DADOS RECEBIDOS DA ESP32
-// ==========================================
-
-let temperatura = 0;
-let umidade = 0;
-let luminosidade = 0;
-
-let velocidade = 0;
-
-let direcao = "Norte";
-let angulo = 0;
-
-
-// Guarda quando chegou a última mensagem da ESP32
-let ultimaMensagemRecebida = 0;
-
-
-// Se ficar mais de 7 segundos sem receber dados,
-// o sistema será considerado offline
-const tempoLimiteOffline = 7000;
-
-
-// ==========================================
-// HISTÓRICO DO GRÁFICO
-// ==========================================
+let ultimaMensagem = 0;
 
 const horarios = [];
-
 const historicoTemperatura = [];
 const historicoUmidade = [];
 const historicoVento = [];
 
-const limiteHistorico = 30;
+const elementos = {
+    temperatura: document.getElementById("temperatura"),
+    umidade: document.getElementById("umidade"),
+    luminosidade: document.getElementById("luminosidade"),
+    velocidade: document.getElementById("velocidade"),
+    direcao: document.getElementById("direcao"),
+    angulo: document.getElementById("angulo"),
+    ponteiro: document.getElementById("ponteiro"),
+    nivelVento: document.getElementById("nivel-vento"),
+    descricaoVento: document.getElementById("descricao-vento"),
+    statusTexto: document.getElementById("status-texto"),
+    statusPonto: document.getElementById("status-ponto"),
+    ultimaAtualizacao: document.getElementById("ultima-atualizacao"),
+    statusHistorico: document.getElementById("status-historico")
+};
 
+const grafico = new Chart(
+    document.getElementById("grafico-condicoes"),
+    {
+        type: "line",
 
-// ==========================================
-// CONFIGURAÇÃO MQTT
-// ==========================================
+        data: {
+            labels: horarios,
 
-const broker =
-    "wss://broker.hivemq.com:8884/mqtt";
+            datasets: [
+                {
+                    label: "Temperatura (°C)",
+                    data: historicoTemperatura,
+                    borderColor: "#f59e0b",
+                    backgroundColor: "rgba(245, 158, 11, 0.08)",
+                    borderWidth: 2,
+                    pointRadius: 2,
+                    pointHoverRadius: 5,
+                    tension: 0.3
+                },
+                {
+                    label: "Umidade (%)",
+                    data: historicoUmidade,
+                    borderColor: "#3b82f6",
+                    backgroundColor: "rgba(59, 130, 246, 0.08)",
+                    borderWidth: 2,
+                    pointRadius: 2,
+                    pointHoverRadius: 5,
+                    tension: 0.3
+                },
+                {
+                    label: "Vento (km/h)",
+                    data: historicoVento,
+                    borderColor: "#0ea5e9",
+                    backgroundColor: "rgba(14, 165, 233, 0.08)",
+                    borderWidth: 2,
+                    pointRadius: 2,
+                    pointHoverRadius: 5,
+                    tension: 0.3
+                }
+            ]
+        },
 
-const topico =
-    "aeolus/sensor/dados";
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: false,
 
-
-// Cria a conexão com o broker MQTT
-const clienteMQTT =
-    mqtt.connect(broker);
-
-
-// ==========================================
-// GRÁFICO DE MONITORAMENTO
-// ==========================================
-
-const contextoGrafico =
-    document.getElementById(
-        "grafico-condicoes"
-    );
-
-
-const graficoCondicoes =
-    new Chart(
-        contextoGrafico,
-        {
-            type: "line",
-
-            data: {
-
-                labels: horarios,
-
-                datasets: [
-
-                    {
-                        label: "Temperatura",
-                        data: historicoTemperatura,
-
-                        borderColor: "#b88732",
-                        backgroundColor: "transparent",
-
-                        borderWidth: 2,
-
-                        pointRadius: 2,
-
-                        tension: 0.3
-                    },
-
-                    {
-                        label: "Umidade",
-                        data: historicoUmidade,
-
-                        borderColor: "#3982ba",
-                        backgroundColor: "transparent",
-
-                        borderWidth: 2,
-
-                        pointRadius: 2,
-
-                        tension: 0.3
-                    },
-
-                    {
-                        label: "Vento",
-                        data: historicoVento,
-
-                        borderColor: "#d97832",
-                        backgroundColor: "transparent",
-
-                        borderWidth: 2,
-
-                        pointRadius: 2,
-
-                        tension: 0.3
-                    }
-
-                ]
+            interaction: {
+                intersect: false,
+                mode: "index"
             },
 
-            options: {
+            plugins: {
+                legend: {
+                    position: "top",
+                    align: "end",
 
-                responsive: true,
+                    labels: {
+                        usePointStyle: true,
+                        boxWidth: 8,
+                        color: "#4b5563",
 
-                maintainAspectRatio: false,
+                        font: {
+                            size: 11
+                        }
+                    }
+                }
+            },
 
-                animation: false,
-
-                interaction: {
-                    intersect: false,
-                    mode: "index"
-                },
-
-                plugins: {
-
-                    legend: {
+            scales: {
+                x: {
+                    grid: {
                         display: false
+                    },
+
+                    ticks: {
+                        color: "#6b7280",
+                        maxTicksLimit: 8
                     }
                 },
 
-                scales: {
+                y: {
+                    beginAtZero: true,
 
-                    x: {
-
-                        grid: {
-                            display: false
-                        },
-
-                        ticks: {
-                            maxTicksLimit: 8
-                        }
+                    grid: {
+                        color: "#edf0f4"
                     },
 
-                    y: {
-
-                        beginAtZero: true
+                    ticks: {
+                        color: "#6b7280"
                     }
                 }
             }
         }
+    }
+);
+
+function numeroValido(valor) {
+    const numero = Number(valor);
+
+    if (Number.isFinite(numero)) {
+        return numero;
+    }
+
+    return null;
+}
+
+function mostrarNumero(elemento, valor, casas = 1) {
+    if (valor === null) {
+        elemento.textContent = "--";
+        return;
+    }
+
+    elemento.textContent = valor.toFixed(casas);
+}
+
+function atualizarStatus(texto, tipo) {
+    elementos.statusTexto.textContent = texto;
+    elementos.statusPonto.className = `status-ponto ${tipo}`;
+}
+
+function atualizarInterface() {
+    mostrarNumero(
+        elementos.temperatura,
+        dadosAtuais.temperatura
     );
 
+    mostrarNumero(
+        elementos.umidade,
+        dadosAtuais.umidade
+    );
 
-// ==========================================
-// CONEXÃO MQTT
-// ==========================================
+    mostrarNumero(
+        elementos.velocidade,
+        dadosAtuais.velocidade
+    );
+
+    elementos.luminosidade.textContent =
+        dadosAtuais.luminosidade ?? "--";
+
+    elementos.direcao.textContent =
+        dadosAtuais.direcao || "--";
+
+    elementos.angulo.textContent =
+        Math.round(dadosAtuais.angulo);
+
+    atualizarBussola();
+    atualizarClassificacao();
+}
+
+function atualizarBussola() {
+    const anguloNormalizado =
+        ((dadosAtuais.angulo % 360) + 360) % 360;
+
+    elementos.ponteiro.style.transform =
+        `translate(-50%, -100%) rotate(${anguloNormalizado}deg)`;
+}
+
+function obterClassificacao(velocidade) {
+    if (velocidade === null) {
+        return {
+            nome: "Aguardando",
+            descricao: "Sem leitura recente",
+            chave: ""
+        };
+    }
+
+    if (velocidade <= 10) {
+        return {
+            nome: "Aura",
+            descricao: "Vento suave",
+            chave: "aura"
+        };
+    }
+
+    if (velocidade <= 25) {
+        return {
+            nome: "Zéfiro",
+            descricao: "Brisa moderada",
+            chave: "zefiro"
+        };
+    }
+
+    if (velocidade <= 40) {
+        return {
+            nome: "Noto",
+            descricao: "Vento intenso",
+            chave: "noto"
+        };
+    }
+
+    return {
+        nome: "Fúria de Bóreas",
+        descricao: "Vento muito intenso",
+        chave: "boreas"
+    };
+}
+
+function atualizarClassificacao() {
+    const classificacao =
+        obterClassificacao(dadosAtuais.velocidade);
+
+    elementos.nivelVento.textContent =
+        classificacao.nome;
+
+    elementos.descricaoVento.textContent =
+        classificacao.descricao;
+
+    document
+        .querySelectorAll(".nivel")
+        .forEach(function (nivel) {
+            nivel.classList.toggle(
+                "ativo",
+                nivel.dataset.nivel === classificacao.chave
+            );
+        });
+}
+
+function registrarAtualizacao() {
+    elementos.ultimaAtualizacao.textContent =
+        new Date().toLocaleTimeString("pt-BR");
+}
+
+function receberDados(mensagem) {
+    const dados =
+        JSON.parse(mensagem.toString());
+
+    dadosAtuais.statusDHT =
+        Boolean(dados.statusDHT);
+
+    if (dadosAtuais.statusDHT) {
+        dadosAtuais.temperatura =
+            numeroValido(dados.temperatura);
+
+        dadosAtuais.umidade =
+            numeroValido(dados.umidade);
+    } else {
+        dadosAtuais.temperatura = null;
+        dadosAtuais.umidade = null;
+    }
+
+    dadosAtuais.luminosidade =
+        numeroValido(dados.luminosidade);
+
+    dadosAtuais.velocidade =
+        numeroValido(dados.velocidade);
+
+    dadosAtuais.angulo =
+        numeroValido(dados.angulo) ?? 0;
+
+    dadosAtuais.direcao =
+        dados.direcao || "--";
+
+    ultimaMensagem = Date.now();
+
+    atualizarStatus(
+        "Recebendo dados",
+        "online"
+    );
+
+    registrarAtualizacao();
+    atualizarInterface();
+}
+
+const clienteMQTT =
+    mqtt.connect(broker);
 
 clienteMQTT.on(
     "connect",
     function () {
-
-        console.log(
-            "Dashboard conectada ao MQTT"
+        atualizarStatus(
+            "MQTT conectado",
+            "aguardando"
         );
-
 
         clienteMQTT.subscribe(
             topico,
             function (erro) {
-
-                if (!erro) {
-
-                    console.log(
-                        "Inscrito no tópico:",
-                        topico
-                    );
-
-                } else {
-
-                    console.log(
-                        "Erro ao assinar tópico MQTT"
+                if (erro) {
+                    atualizarStatus(
+                        "Erro ao assinar o tópico",
+                        "offline"
                     );
                 }
             }
@@ -201,379 +325,79 @@ clienteMQTT.on(
     }
 );
 
-
-// ==========================================
-// RECEBE AS MENSAGENS DA ESP32
-// ==========================================
-
 clienteMQTT.on(
     "message",
     function (topicoRecebido, mensagem) {
-
-        const texto =
-            mensagem.toString();
-
-
-        ultimaMensagemRecebida =
-            Date.now();
-
-
-        atualizarStatusSistema(true);
-
-
-        console.log(
-            "MQTT recebido:",
-            texto
-        );
-
+        if (topicoRecebido !== topico) {
+            return;
+        }
 
         try {
-
-            const dados =
-                JSON.parse(texto);
-
-
-            // ==================================
-            // DADOS DOS SENSORES
-            // ==================================
-
-            temperatura =
-                dados.temperatura;
-
-            umidade =
-                dados.umidade;
-
-            luminosidade =
-                dados.luminosidade;
-
-            velocidade =
-                dados.velocidade;
-
-            angulo =
-                dados.angulo;
-
-            direcao =
-                dados.direcao;
-
-
-            // ==================================
-            // STATUS DOS COMPONENTES
-            // ==================================
-
-            atualizarStatusDHT(
-                dados.statusDHT
-            );
-
-
-            // ==================================
-            // ATUALIZA A INTERFACE
-            // ==================================
-
-            atualizarDashboard();
-
-            
-
+            receberDados(mensagem);
         } catch (erro) {
-
-            console.log(
-                "Erro ao interpretar dados MQTT:",
-                erro
+            console.error(
+                "Mensagem MQTT inválida:",
+                erro.message
             );
         }
     }
 );
 
-
-// ==========================================
-// CASO A CONEXÃO MQTT CAIA
-// ==========================================
+clienteMQTT.on(
+    "reconnect",
+    function () {
+        atualizarStatus(
+            "Reconectando ao MQTT",
+            "aguardando"
+        );
+    }
+);
 
 clienteMQTT.on(
     "offline",
     function () {
-
-        console.log(
-            "Dashboard desconectada do MQTT"
+        atualizarStatus(
+            "MQTT desconectado",
+            "offline"
         );
-
-        atualizarStatusSistema(false);
     }
 );
-
 
 clienteMQTT.on(
     "error",
     function (erro) {
-
-        console.log(
+        console.error(
             "Erro MQTT:",
-            erro
+            erro.message
         );
 
-        atualizarStatusSistema(false);
+        atualizarStatus(
+            "Erro na conexão MQTT",
+            "offline"
+        );
     }
 );
 
-
-// ==========================================
-// STATUS GERAL DO SISTEMA
-// ==========================================
-
-function atualizarStatusSistema(online) {
-
-    const texto =
-        document.getElementById(
-            "status-texto"
-        );
-
-    const ponto =
-        document.getElementById(
-            "status-ponto"
-        );
-
-
-    if (online) {
-
-        texto.textContent =
-            "Sistema online";
-
-        ponto.style.background =
-            "#42a878";
-
-    } else {
-
-        texto.textContent =
-            "Sistema offline";
-
-        ponto.style.background =
-            "#b9433d";
-    }
-}
-
-
-// ==========================================
-// STATUS DO DHT22
-// ==========================================
-
-function atualizarStatusDHT(online) {
-
-    const ponto =
-        document.getElementById(
-            "status-dht-ponto"
-        );
-
-    const texto =
-        document.getElementById(
-            "status-dht-texto"
-        );
-
-
-    if (!ponto || !texto) {
-        return;
-    }
-
-
-    if (online) {
-
-        ponto.style.background =
-            "#42a878";
-
-        texto.textContent =
-            "Online";
-
-        texto.style.color =
-            "#42a878";
-
-    } else {
-
-        ponto.style.background =
-            "#b9433d";
-
-        texto.textContent =
-            "Offline";
-
-        texto.style.color =
-            "#b9433d";
-    }
-}
-
-
-// ==========================================
-// ATUALIZA OS VALORES NA TELA
-// ==========================================
-
-function atualizarDashboard() {
-
-    document.getElementById(
-        "temperatura"
-    ).textContent =
-        Number(
-            temperatura
-        ).toFixed(1);
-
-
-    document.getElementById(
-        "umidade"
-    ).textContent =
-        Number(
-            umidade
-        ).toFixed(1);
-
-
-    document.getElementById(
-        "luminosidade"
-    ).textContent =
-        luminosidade;
-
-
-    document.getElementById(
-        "velocidade"
-    ).textContent =
-        Number(
-            velocidade
-        ).toFixed(1);
-
-
-    document.getElementById(
-        "direcao"
-    ).textContent =
-        direcao;
-
-
-    document.getElementById(
-        "angulo"
-    ).textContent =
-        angulo;
-
-
-    atualizarBussola();
-
-    classificarVento();
-
-    atualizarHorario();
-}
-
-
-// ==========================================
-// GIRA O PONTEIRO DA BÚSSOLA
-// ==========================================
-
-function atualizarBussola() {
-
-    const ponteiro =
-        document.getElementById(
-            "ponteiro"
-        );
-
-
-    ponteiro.style.transform =
-        `translate(-50%, -100%) rotate(${angulo}deg)`;
-}
-
-
-// ==========================================
-// CLASSIFICA A VELOCIDADE DO VENTO
-// ==========================================
-
-function classificarVento() {
-
-    const nivel =
-        document.getElementById(
-            "nivel-vento"
-        );
-
-
-    const descricao =
-        document.getElementById(
-            "descricao-vento"
-        );
-
-
-    if (velocidade <= 10) {
-
-        nivel.textContent =
-            "Aura";
-
-        descricao.textContent =
-            "Vento suave";
-
-    } else if (velocidade <= 25) {
-
-        nivel.textContent =
-            "Zéfiro";
-
-        descricao.textContent =
-            "Brisa moderada";
-
-    } else if (velocidade <= 40) {
-
-        nivel.textContent =
-            "Noto";
-
-        descricao.textContent =
-            "Vento intenso";
-
-    } else {
-
-        nivel.textContent =
-            "Fúria de Bóreas";
-
-        descricao.textContent =
-            "Vento muito intenso";
-    }
-}
-
-
-// ==========================================
-// HORÁRIO DA ÚLTIMA ATUALIZAÇÃO
-// ==========================================
-
-function atualizarHorario() {
-
-    const agora =
-        new Date();
-
-
-    const horario =
-        agora.toLocaleTimeString(
-            "pt-BR"
-        );
-
-
-    document.getElementById(
-        "ultima-atualizacao"
-    ).textContent =
-        horario;
-}
-
-
-// ==========================================
-// ATUALIZA O GRÁFICO
-// ==========================================
-
-// ==========================================
-// CARREGA O HISTÓRICO DO POSTGRESQL
-// ==========================================
-
 async function carregarHistorico() {
-
     try {
-
-        const resposta = await fetch(
-            "http://localhost:3000/api/leituras"
-        );
+        const resposta =
+            await fetch(
+                "http://localhost:3000/api/leituras"
+            );
 
         if (!resposta.ok) {
             throw new Error(
-                "Não foi possível consultar a API."
+                "API indisponível"
             );
         }
 
-        const dados = await resposta.json();
+        const resultado =
+            await resposta.json();
 
-        const leituras = Array.isArray(dados)
-            ? dados
-            : dados.value || [];
+        const leituras =
+            Array.isArray(resultado)
+                ? resultado
+                : resultado.value || [];
 
         const ultimasLeituras =
             leituras.slice(-limiteHistorico);
@@ -585,12 +409,10 @@ async function carregarHistorico() {
 
         ultimasLeituras.forEach(
             function (leitura) {
-
-                const data =
-                    new Date(leitura.criado_em);
-
                 const horario =
-                    data.toLocaleTimeString(
+                    new Date(
+                        leitura.criado_em
+                    ).toLocaleTimeString(
                         "pt-BR",
                         {
                             hour: "2-digit",
@@ -602,70 +424,60 @@ async function carregarHistorico() {
                 horarios.push(horario);
 
                 historicoTemperatura.push(
-                    Number(leitura.temperatura)
+                    numeroValido(
+                        leitura.temperatura
+                    )
                 );
 
                 historicoUmidade.push(
-                    Number(leitura.umidade)
+                    numeroValido(
+                        leitura.umidade
+                    )
                 );
 
                 historicoVento.push(
-                    Number(leitura.velocidade)
+                    numeroValido(
+                        leitura.velocidade
+                    )
                 );
             }
         );
 
-        graficoCondicoes.update();
+        grafico.update();
 
-        console.log(
-            "Histórico carregado da API:",
-            ultimasLeituras.length,
-            "leituras"
-        );
-
+        elementos.statusHistorico.textContent =
+            `${ultimasLeituras.length} leituras carregadas`;
     } catch (erro) {
+        elementos.statusHistorico.textContent =
+            "Histórico indisponível";
 
-        console.log(
+        console.error(
             "Erro ao carregar histórico:",
             erro.message
         );
     }
 }
 
-// ==========================================
-// VERIFICA SE A ESP32 PAROU DE ENVIAR DADOS
-// ==========================================
-
 setInterval(
     function () {
-
-        const agora =
-            Date.now();
-
-
-        if (
-            ultimaMensagemRecebida === 0 ||
-            agora -
-            ultimaMensagemRecebida >
-            tempoLimiteOffline
-        ) {
-
-            atualizarStatusSistema(false);
+        if (ultimaMensagem === 0) {
+            return;
         }
 
+        const tempoSemDados =
+            Date.now() - ultimaMensagem;
+
+        if (tempoSemDados > limiteOffline) {
+            atualizarStatus(
+                "Sem dados recentes",
+                "offline"
+            );
+        }
     },
     1000
 );
 
-
-// ==========================================
-// ESTADO INICIAL DA DASHBOARD
-// ==========================================
-
-atualizarDashboard();
-
-atualizarStatusSistema(false);
-
+atualizarInterface();
 carregarHistorico();
 
 setInterval(

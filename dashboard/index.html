@@ -1,859 +1,200 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Aeolus | Vortex Lab</title>
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
+    <title>Aeolus | Estação Meteorológica</title>
     <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
-
     <main class="dashboard">
-
         <header class="topo">
-
-            <div class="assinatura">
-                <span class="marca-vortex">VORTEX LAB</span>
-                <span class="divisor"></span>
-                <span>IoT</span>
+            <div>
+                <p class="marca">VORTEX LAB · IoT</p>
+                <h1>Aeolus</h1>
+                <p class="subtitulo">Estação Meteorológica IoT</p>
             </div>
 
-            <div class="titulo">
-
-                <span class="desafio">
-                    DESAFIO AEOLUS
-                </span>
-
-                <h1>AEOLUS</h1>
-
-                <p>
-                    Estação Meteorológica Inteligente
-                </p>
-
-                <div class="detalhe-titulo">
-                    <span></span>
-                    <i></i>
-                    <span></span>
-                </div>
-
-            </div>
-
-            <div class="status-sistema">
-
-                <span
-                    class="status-ponto"
-                    id="status-ponto">
-                </span>
+            <div class="conexao" aria-live="polite">
+                <span class="status-ponto offline" id="status-ponto"></span>
 
                 <div>
+                    <strong id="status-texto">Conectando...</strong>
 
-                    <strong id="status-texto">
-                        Sistema offline
-                    </strong>
-
-                    <p>
+                    <span>
                         Atualizado às
-                        <span id="ultima-atualizacao">
-                            --:--:--
-                        </span>
-                    </p>
-
+                        <span id="ultima-atualizacao">--:--:--</span>
+                    </span>
                 </div>
-
             </div>
-
         </header>
 
-
-        <!-- ==========================================
-             DADOS PRINCIPAIS
-        =========================================== -->
-
-        <section class="painel-principal">
-
-
-            <!-- TEMPERATURA -->
-
-            <article class="card dado">
-
-                <div class="card-topo">
-
-                    <span class="numero">
-                        01
-                    </span>
-
-                    <span class="sensor-tag">
-                        DHT22
-                    </span>
-
-                </div>
-
-                <p class="nome-dado">
-                    Temperatura
-                </p>
-
-                <div class="valor">
-
-                    <span id="temperatura">
-                        0.0
-                    </span>
-
-                    <small>
-                        °C
-                    </small>
-
-                </div>
-
-                <p class="descricao">
-                    Temperatura ambiente
-                </p>
-
-            </article>
-
-
-            <!-- UMIDADE -->
-
-            <article class="card dado">
-
-                <div class="card-topo">
-
-                    <span class="numero">
-                        02
-                    </span>
-
-                    <span class="sensor-tag">
-                        DHT22
-                    </span>
-
-                </div>
-
-                <p class="nome-dado">
-                    Umidade
-                </p>
-
-                <div class="valor">
-
-                    <span id="umidade">
-                        0.0
-                    </span>
-
-                    <small>
-                        %
-                    </small>
-
-                </div>
-
-                <p class="descricao">
-                    Umidade relativa do ar
-                </p>
-
-            </article>
-
-
-            <!-- DIREÇÃO DO VENTO -->
-
-            <article class="card card-direcao">
-
-                <div class="card-topo">
-
-                    <span class="numero">
-                        03
-                    </span>
-
-                    <span class="sensor-tag">
-                        BIRUTA
-                    </span>
-
-                </div>
-
-                <p class="nome-dado">
-                    Direção do vento
-                </p>
-
-
-                <div class="bussola">
-
-                    <span class="ponto norte">
-                        N
-                    </span>
-
-                    <span class="ponto nordeste">
-                        NE
-                    </span>
-
-                    <span class="ponto leste">
-                        L
-                    </span>
-
-                    <span class="ponto sudeste">
-                        SE
-                    </span>
-
-                    <span class="ponto sul">
-                        S
-                    </span>
-
-                    <span class="ponto sudoeste">
-                        SO
-                    </span>
-
-                    <span class="ponto oeste">
-                        O
-                    </span>
-
-                    <span class="ponto noroeste">
-                        NO
-                    </span>
-
-                    <div class="eixo-horizontal"></div>
-
-                    <div class="eixo-vertical"></div>
-
-                    <div class="circulo-interno"></div>
-
-                    <div
-                        class="ponteiro"
-                        id="ponteiro">
+        <section class="conteudo-principal">
+            <div class="leituras">
+                <article class="card leitura temperatura-card">
+                    <div class="card-cabecalho">
+                        <span>Temperatura</span>
+                        <small>DHT22</small>
                     </div>
 
-                    <div class="centro-bussola"></div>
+                    <div class="valor">
+                        <strong id="temperatura">--</strong>
+                        <span>°C</span>
+                    </div>
 
+                    <p>Temperatura do ambiente</p>
+                </article>
+
+                <article class="card leitura umidade-card">
+                    <div class="card-cabecalho">
+                        <span>Umidade</span>
+                        <small>DHT22</small>
+                    </div>
+
+                    <div class="valor">
+                        <strong id="umidade">--</strong>
+                        <span>%</span>
+                    </div>
+
+                    <p>Umidade relativa do ar</p>
+                </article>
+
+                <article class="card leitura luminosidade-card">
+                    <div class="card-cabecalho">
+                        <span>Luminosidade</span>
+                        <small>LDR</small>
+                    </div>
+
+                    <div class="valor">
+                        <strong id="luminosidade">--</strong>
+                    </div>
+
+                    <p>Leitura da luz ambiente</p>
+                </article>
+
+                <article class="card leitura vento-card">
+                    <div class="card-cabecalho">
+                        <span>Velocidade do vento</span>
+                        <small>ANEMÔMETRO</small>
+                    </div>
+
+                    <div class="valor">
+                        <strong id="velocidade">--</strong>
+                        <span>km/h</span>
+                    </div>
+
+                    <div class="classificacao-vento">
+                        <strong id="nivel-vento">Aguardando</strong>
+                        <span id="descricao-vento">Sem leitura recente</span>
+                    </div>
+                </article>
+            </div>
+
+            <article class="card direcao-card">
+                <div class="card-cabecalho">
+                    <span>Direção do vento</span>
+                    <small>BIRUTA</small>
                 </div>
 
+                <div class="bussola" aria-label="Bússola da direção do vento">
+                    <span class="ponto norte">N</span>
+                    <span class="ponto nordeste">NE</span>
+                    <span class="ponto leste">L</span>
+                    <span class="ponto sudeste">SE</span>
+                    <span class="ponto sul">S</span>
+                    <span class="ponto sudoeste">SO</span>
+                    <span class="ponto oeste">O</span>
+                    <span class="ponto noroeste">NO</span>
+
+                    <div class="marcacao marcacao-vertical"></div>
+                    <div class="marcacao marcacao-horizontal"></div>
+                    <div class="ponteiro" id="ponteiro"></div>
+                    <div class="centro-bussola"></div>
+                </div>
 
                 <div class="direcao-atual">
-
-                    <strong id="direcao">
-                        Norte
-                    </strong>
+                    <strong id="direcao">Norte</strong>
 
                     <span>
-                        <span id="angulo">
-                            0
-                        </span>°
+                        <span id="angulo">0</span>°
                     </span>
-
                 </div>
 
-
-                <div class="calibracao">
-
-                    <div class="calibracao-status">
-
-                        <span class="ponto-calibracao"></span>
-
-                        <div>
-
-                            <strong>
-                                Referência Norte
-                            </strong>
-
-                            <p>
-                                Calibração pelo botão físico
-                            </p>
-
-                        </div>
-
-                    </div>
-
-                    <span class="gpio">
-                        GPIO 23
-                    </span>
-
-                </div>
-
+                <p class="calibracao">
+                    Referência do Norte: botão no GPIO 23
+                </p>
             </article>
-
-
-            <!-- VELOCIDADE -->
-
-            <article class="card dado">
-
-                <div class="card-topo">
-
-                    <span class="numero">
-                        04
-                    </span>
-
-                    <span class="sensor-tag">
-                        ANEMÔMETRO
-                    </span>
-
-                </div>
-
-                <p class="nome-dado">
-                    Velocidade do vento
-                </p>
-
-                <div class="valor valor-vento">
-
-                    <span id="velocidade">
-                        0.0
-                    </span>
-
-                    <small>
-                        km/h
-                    </small>
-
-                </div>
-
-                <strong
-                    class="nivel-vento"
-                    id="nivel-vento">
-
-                    Aura
-
-                </strong>
-
-                <p
-                    class="descricao"
-                    id="descricao-vento">
-
-                    Vento suave
-
-                </p>
-
-            </article>
-
-
-            <!-- LUMINOSIDADE -->
-
-            <article class="card dado">
-
-                <div class="card-topo">
-
-                    <span class="numero">
-                        05
-                    </span>
-
-                    <span class="sensor-tag">
-                        LDR
-                    </span>
-
-                </div>
-
-                <p class="nome-dado">
-                    Luminosidade
-                </p>
-
-                <div class="valor">
-
-                    <span id="luminosidade">
-                        0
-                    </span>
-
-                </div>
-
-                <p class="descricao">
-                    Leitura ADC • 0 a 4095
-                </p>
-
-            </article>
-
         </section>
 
-
-        <!-- ==========================================
-             ESCALA AEOLUS
-        =========================================== -->
-
-        <section class="escala">
-
-            <div class="escala-titulo">
-
-                <span>
-                    ESCALA AEOLUS
-                </span>
-
-                <p>
-                    Classificação da intensidade do vento
-                </p>
-
+        <section class="escala-aeolus">
+            <div class="escala-introducao">
+                <span>ESCALA AEOLUS</span>
+                <p>Classificação da intensidade do vento</p>
             </div>
 
-
-            <div class="faixas">
-
-                <div class="faixa">
-
-                    <span class="indicador aura"></span>
-
-                    <div>
-                        <strong>
-                            Aura
-                        </strong>
-
-                        <p>
-                            0 — 10 km/h
-                        </p>
-                    </div>
-
-                </div>
-
-
-                <div class="faixa">
-
-                    <span class="indicador zefiro"></span>
-
-                    <div>
-                        <strong>
-                            Zéfiro
-                        </strong>
-
-                        <p>
-                            &gt; 10 — 25 km/h
-                        </p>
-                    </div>
-
-                </div>
-
-
-                <div class="faixa">
-
-                    <span class="indicador noto"></span>
-
-                    <div>
-                        <strong>
-                            Noto
-                        </strong>
-
-                        <p>
-                            &gt; 25 — 40 km/h
-                        </p>
-                    </div>
-
-                </div>
-
-
-                <div class="faixa">
-
-                    <span class="indicador boreas"></span>
-
-                    <div>
-                        <strong>
-                            Fúria de Bóreas
-                        </strong>
-
-                        <p>
-                            &gt; 40 km/h
-                        </p>
-                    </div>
-
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- ==========================================
-             MONITORAMENTO
-        =========================================== -->
-
-        <section class="bloco historico">
-
-            <div class="titulo-bloco">
+            <div class="nivel" data-nivel="aura">
+                <i class="cor aura"></i>
 
                 <div>
-
-                    <span class="linha-titulo"></span>
-
-                    <div>
-
-                        <span class="mini-titulo">
-                            MONITORAMENTO
-                        </span>
-
-                        <h2>
-                            Condições nas últimas horas
-                        </h2>
-
-                    </div>
-
+                    <strong>Aura</strong>
+                    <span>0 a 10 km/h</span>
                 </div>
-
-
-                <div class="legenda">
-
-                    <span>
-
-                        <i class="legenda-cor temperatura-cor"></i>
-
-                        Temperatura
-
-                    </span>
-
-                    <span>
-
-                        <i class="legenda-cor umidade-cor"></i>
-
-                        Umidade
-
-                    </span>
-
-                    <span>
-
-                        <i class="legenda-cor vento-cor"></i>
-
-                        Vento
-
-                    </span>
-
-                </div>
-
             </div>
 
+            <div class="nivel" data-nivel="zefiro">
+                <i class="cor zefiro"></i>
+
+                <div>
+                    <strong>Zéfiro</strong>
+                    <span>Acima de 10 a 25 km/h</span>
+                </div>
+            </div>
+
+            <div class="nivel" data-nivel="noto">
+                <i class="cor noto"></i>
+
+                <div>
+                    <strong>Noto</strong>
+                    <span>Acima de 25 a 40 km/h</span>
+                </div>
+            </div>
+
+            <div class="nivel" data-nivel="boreas">
+                <i class="cor boreas"></i>
+
+                <div>
+                    <strong>Fúria de Bóreas</strong>
+                    <span>Acima de 40 km/h</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="card historico">
+            <div class="historico-cabecalho">
+                <div>
+                    <span class="secao-label">MONITORAMENTO</span>
+                    <h2>Condições nas últimas leituras</h2>
+                </div>
+
+                <span id="status-historico">
+                    Carregando histórico...
+                </span>
+            </div>
 
             <div class="grafico-container">
-
                 <canvas id="grafico-condicoes"></canvas>
-
             </div>
-
         </section>
-
-
-        <!-- ==========================================
-             ESTADO DO SISTEMA
-        =========================================== -->
-
-        <section class="bloco sistema">
-
-            <div class="titulo-bloco">
-
-                <div>
-
-                    <span class="linha-titulo"></span>
-
-                    <div>
-
-                        <span class="mini-titulo">
-                            AEOLUS
-                        </span>
-
-                        <h2>
-                            Estado do sistema
-                        </h2>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <div class="componentes">
-
-
-                <!-- DHT22 -->
-
-                <div class="componente">
-
-                    <div class="componente-cabecalho">
-
-                        <span>
-                            01
-                        </span>
-
-                        <i
-                            class="online"
-                            id="status-dht-ponto">
-                        </i>
-
-                    </div>
-
-                    <strong>
-                        DHT22
-                    </strong>
-
-                    <p>
-                        Temperatura e umidade
-                    </p>
-
-                    <small id="status-dht-texto">
-                        Aguardando dados
-                    </small>
-
-                </div>
-
-
-                <!-- LDR -->
-
-                <div class="componente">
-
-                    <div class="componente-cabecalho">
-
-                        <span>
-                            02
-                        </span>
-
-                        <i class="online"></i>
-
-                    </div>
-
-                    <strong>
-                        LDR
-                    </strong>
-
-                    <p>
-                        Luminosidade ambiente
-                    </p>
-
-                    <small>
-                        Ativo
-                    </small>
-
-                </div>
-
-
-                <!-- ANEMÔMETRO -->
-
-                <div class="componente">
-
-                    <div class="componente-cabecalho">
-
-                        <span>
-                            03
-                        </span>
-
-                        <i class="teste"></i>
-
-                    </div>
-
-                    <strong>
-                        Anemômetro
-                    </strong>
-
-                    <p>
-                        Velocidade do vento
-                    </p>
-
-                    <small class="texto-teste">
-                        Em operação
-                    </small>
-
-                </div>
-
-
-                <!-- BIRUTA -->
-
-                <div class="componente">
-
-                    <div class="componente-cabecalho">
-
-                        <span>
-                            04
-                        </span>
-
-                        <i class="teste"></i>
-
-                    </div>
-
-                    <strong>
-                        Biruta
-                    </strong>
-
-                    <p>
-                        Direção do vento
-                    </p>
-
-                    <small class="texto-teste">
-                        Em operação
-                    </small>
-
-                </div>
-
-
-                <!-- CALIBRAÇÃO -->
-
-                <div class="componente">
-
-                    <div class="componente-cabecalho">
-
-                        <span>
-                            05
-                        </span>
-
-                        <i class="teste"></i>
-
-                    </div>
-
-                    <strong>
-                        Calibração
-                    </strong>
-
-                    <p>
-                        Referência de Norte
-                    </p>
-
-                    <small class="texto-teste">
-                        Botão • GPIO 23
-                    </small>
-
-                </div>
-
-
-                <!-- DISPLAY -->
-
-                <div class="componente">
-
-                    <div class="componente-cabecalho">
-
-                        <span>
-                            06
-                        </span>
-
-                        <i class="online"></i>
-
-                    </div>
-
-                    <strong>
-                        Display
-                    </strong>
-
-                    <p>
-                        LCD 16x2 • I2C
-                    </p>
-
-                    <small>
-                        Ativo
-                    </small>
-
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- ==========================================
-             INFORMAÇÕES DO PROJETO
-        =========================================== -->
-
-        <section class="info-projeto">
-
-            <div>
-
-                <span class="mini-titulo">
-                    LOCAL
-                </span>
-
-                <strong>
-                    Vortex Lab
-                </strong>
-
-                <p>
-                    Universidade de Fortaleza
-                </p>
-
-            </div>
-
-
-            <div>
-
-                <span class="mini-titulo">
-                    CONTROLADOR
-                </span>
-
-                <strong>
-                    ESP32
-                </strong>
-
-                <p>
-                    DevKit V4
-                </p>
-
-            </div>
-
-
-            <div>
-
-                <span class="mini-titulo">
-                    COMUNICAÇÃO
-                </span>
-
-                <strong>
-                    MQTT
-                </strong>
-
-                <p>
-                    Comunicação ativa
-                </p>
-
-            </div>
-
-
-            <div>
-
-                <span class="mini-titulo">
-                    PROJETO
-                </span>
-
-                <strong>
-                    Aeolus
-                </strong>
-
-                <p>
-                    Desafio IoT • 2026
-                </p>
-
-            </div>
-
-        </section>
-
-
-        <!-- ==========================================
-             RODAPÉ
-        =========================================== -->
 
         <footer class="rodape">
-
-            <div>
-
-                <strong>
-                    VORTEX LAB
-                </strong>
-
-                <span>
-                    UNIFOR
-                </span>
-
-            </div>
-
-
-            <span class="rodape-linha"></span>
-
-
-            <p>
-                DESAFIO AEOLUS • 2026
-            </p>
-
+            <span>Vortex Lab · Universidade de Fortaleza</span>
+            <span>ESP32 DevKit V4</span>
+            <span>Desafio Aeolus · 2026</span>
         </footer>
-
     </main>
 
-
-    <!-- MQTT -->
-
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
-
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-   
-    <!-- JAVASCRIPT DA DASHBOARD -->
-
     <script src="script.js"></script>
-
-
 </body>
-
 </html>
