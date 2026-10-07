@@ -2,10 +2,15 @@
 
 #include "sensores/ldr.h"
 
-#define LDR_PIN 35
+namespace {
+constexpr int LDR_PIN = 35;
+}
 
 void iniciarLDR() {
     pinMode(LDR_PIN, INPUT);
+    analogReadResolution(12);
+
+    Serial.println("LDR analogico iniciado no GPIO35.");
 }
 
 int lerLDR() {

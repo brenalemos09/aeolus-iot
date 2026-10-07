@@ -3,9 +3,19 @@
 
 void iniciarRGB();
 void desligarRGB();
+
 void acenderVermelho();
 void acenderVerde();
 void acenderAzul();
-void atualizarCorPelaVelocidade(float velocidadeKmh);
+
+void definirCorRGB(
+    int vermelho,
+    int verde,
+    int azul
+);
+
+void atualizarCorPelaVelocidade(
+    float velocidadeKmh
+);
 
 #endif

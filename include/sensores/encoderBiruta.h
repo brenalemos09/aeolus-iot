@@ -3,8 +3,12 @@
 
 void iniciarEncoderBiruta();
 void atualizarEncoderBiruta();
+void calibrarBiruta();
+
 int obterPosicaoBiruta();
 int obterAnguloBiruta();
+int obterSetorBiruta();
+
 const char* obterDirecaoBiruta();
 
 #endif

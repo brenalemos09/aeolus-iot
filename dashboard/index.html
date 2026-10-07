@@ -20,7 +20,6 @@
 
                 <div>
                     <strong id="status-texto">Conectando...</strong>
-
                     <span>
                         Atualizado às
                         <span id="ultima-atualizacao">--:--:--</span>
@@ -69,7 +68,7 @@
                         <strong id="luminosidade">--</strong>
                     </div>
 
-                    <p>Leitura da luz ambiente</p>
+                    <p>Leitura bruta do LDR: 0 a 4095, sem conversão para lux</p>
                 </article>
 
                 <article class="card leitura vento-card">
@@ -113,58 +112,59 @@
                 </div>
 
                 <div class="direcao-atual">
-                    <strong id="direcao">Norte</strong>
-
-                    <span>
-                        <span id="angulo">0</span>°
-                    </span>
+                    <strong id="direcao">--</strong>
+                    <span><span id="angulo">--</span>°</span>
                 </div>
 
                 <p class="calibracao">
-                    Referência do Norte: botão no GPIO 23
+                    Referência do Norte: botão do encoder no GPIO22
                 </p>
             </article>
         </section>
 
-        <section class="escala-aeolus">
+        <section class="escala-aeolus" aria-label="Escala visual Aeolus">
             <div class="escala-introducao">
                 <span>ESCALA AEOLUS</span>
-                <p>Classificação da intensidade do vento</p>
+                <p>Faixas visuais de velocidade do projeto</p>
+            </div>
+
+            <div class="nivel" data-nivel="parado">
+                <i class="cor parado" aria-hidden="true"></i>
+                <div>
+                    <strong>Parado</strong>
+                    <span>Até 0,1 km/h · LED apagado</span>
+                </div>
             </div>
 
             <div class="nivel" data-nivel="aura">
-                <i class="cor aura"></i>
-
+                <i class="cor aura" aria-hidden="true"></i>
                 <div>
                     <strong>Aura</strong>
-                    <span>0 a 10 km/h</span>
+                    <span>Acima de 0,1 até 0,5 km/h</span>
                 </div>
             </div>
 
             <div class="nivel" data-nivel="zefiro">
-                <i class="cor zefiro"></i>
-
+                <i class="cor zefiro" aria-hidden="true"></i>
                 <div>
                     <strong>Zéfiro</strong>
-                    <span>Acima de 10 a 25 km/h</span>
+                    <span>Acima de 0,5 até 1,0 km/h</span>
                 </div>
             </div>
 
             <div class="nivel" data-nivel="noto">
-                <i class="cor noto"></i>
-
+                <i class="cor noto" aria-hidden="true"></i>
                 <div>
                     <strong>Noto</strong>
-                    <span>Acima de 25 a 40 km/h</span>
+                    <span>Acima de 1,0 até 3,0 km/h</span>
                 </div>
             </div>
 
             <div class="nivel" data-nivel="boreas">
-                <i class="cor boreas"></i>
-
+                <i class="cor boreas" aria-hidden="true"></i>
                 <div>
                     <strong>Fúria de Bóreas</strong>
-                    <span>Acima de 40 km/h</span>
+                    <span>Acima de 3,0 km/h</span>
                 </div>
             </div>
         </section>
@@ -176,9 +176,7 @@
                     <h2>Condições nas últimas leituras</h2>
                 </div>
 
-                <span id="status-historico">
-                    Carregando histórico...
-                </span>
+                <span id="status-historico">Carregando histórico...</span>
             </div>
 
             <div class="grafico-container">

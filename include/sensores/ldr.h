@@ -2,7 +2,6 @@
 #define LDR_H
 
 void iniciarLDR();
-
 int lerLDR();
 
 #endif
