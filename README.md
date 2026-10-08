@@ -1,10 +1,46 @@
+<div align="center">
+
 # Aeolus — Estação Meteorológica IoT
 
-Projeto desenvolvido durante o Programa de Estágio em IoT do **Vortex Lab — Universidade de Fortaleza (UNIFOR)**.
+**Temperatura, umidade, luminosidade, velocidade e direção do vento em tempo real**
+
+![ESP32](https://img.shields.io/badge/ESP32-DevKit%20V4-E7352C?logo=espressif&logoColor=white)
+![PlatformIO](https://img.shields.io/badge/PlatformIO-Arduino-F5822A?logo=platformio&logoColor=white)
+![MQTT](https://img.shields.io/badge/MQTT-HiveMQ-660066?logo=mqtt&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-Express-339933?logo=nodedotjs&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-4169E1?logo=postgresql&logoColor=white)
+![Status](https://img.shields.io/badge/status-em%20valida%C3%A7%C3%A3o-yellow)
+
+Vortex Lab — Universidade de Fortaleza (UNIFOR) · Programa de Estágio em IoT
+
+</div>
+
+---
+
+## Sumário
+
+- [Visão geral](#visão-geral)
+- [Estado atual](#estado-atual)
+- [Arquitetura](#arquitetura-do-sistema)
+- [Tecnologias e componentes](#tecnologias-e-componentes)
+- [Pinagem final](#pinagem-final)
+- [Funcionamento dos componentes](#funcionamento-dos-componentes)
+- [Comunicação MQTT](#comunicação-mqtt)
+- [Backend, banco e histórico](#backend-banco-de-dados-e-histórico)
+- [Estrutura do projeto](#estrutura-do-projeto)
+- [Como executar](#configuração-e-execução)
+- [Testes](#testes-realizados)
+- [Limitações e próximos passos](#limitações-e-próximos-passos)
+- [Identidade do projeto](#identidade-do-projeto)
+- [Versionamento e autoria](#versionamento)
+
+---
+
+## Visão geral
 
 O Aeolus utiliza um ESP32 para coletar dados do ambiente, apresentá-los localmente e enviá-los para uma dashboard. O projeto reúne sistemas embarcados, eletrônica, comunicação MQTT, desenvolvimento web, banco de dados e fabricação digital.
 
-O nome faz referência a Éolo, figura da mitologia grega associada aos ventos. Essa identidade aparece na caixa da estação, na animação do display e na classificação visual da velocidade do vento.
+O nome faz referência a Éolo, figura da mitologia grega associada aos ventos. Essa identidade aparece na caixa da estação ("O Odre de Aeolus"), na dashboard ("Templo de Aeolus") e na classificação visual da velocidade do vento (Escala Aeolus).
 
 ## Estado atual
 
@@ -14,9 +50,18 @@ As alterações foram enviadas ao GitHub seguindo o fluxo:
 
 **`feature/integracao-final` → `develop` → `main`**
 
-O backend e o armazenamento no PostgreSQL já funcionaram em etapas anteriores. A gravação de novas leituras e a exibição do histórico na dashboard ainda precisam ser conferidas com a versão integrada atual.
+Em **8 de outubro de 2026**, foram feitas estas atualizações:
 
-A leitura do LDR e a calibração física dos encoders possuem limitações descritas neste documento.
+- Troca do módulo LDR por um com resposta analógica gradual;
+- Conversão da leitura do LDR para uma **estimativa de iluminância em lux**;
+- Relógio do LCD sincronizado por NTP, em UTC−3;
+- Dashboard ajustada para exibir a luminosidade em lux;
+- `GET /api/status` retornando servidor online e banco conectado;
+- Gráfico da dashboard atualizando, conforme relato da equipe.
+
+Ainda precisam ser conferidos: a continuidade da gravação das leituras no PostgreSQL, a exibição da luminosidade em lux na dashboard e a bússola da direção do vento.
+
+A estimativa de lux, a calibração física dos encoders e as demais limitações estão descritas neste documento.
 
 ## Objetivo
 
@@ -24,7 +69,7 @@ Desenvolver uma estação capaz de acompanhar:
 
 - Temperatura ambiente;
 - Umidade relativa do ar;
-- Resposta do sensor de luminosidade;
+- Luminosidade estimada em lux;
 - Velocidade do vento;
 - Direção do vento.
 
@@ -58,7 +103,7 @@ Placa utilizada: **ESP32 DevKit V4**.
 | Componente | Sinal | GPIO | Função |
 |---|---|---:|---|
 | DHT22 | DATA | 4 | Leitura de temperatura e umidade |
-| LDR | Saída do módulo | 35 | Leitura bruta com `analogRead` |
+| LDR | Sinal analógico | 35 | Leitura com `analogRead` e estimativa em lux |
 | RGB | Vermelho | 26 | Controle do canal vermelho |
 | RGB | Verde | 25 | Controle do canal verde |
 | RGB | Azul | 33 | Controle do canal azul |
@@ -91,19 +136,26 @@ O módulo trata resultados inválidos e retorna `-1` quando ocorre uma falha de 
 
 ### Luminosidade
 
-O firmware utiliza `analogRead` no GPIO35, com resolução de 12 bits. O resultado é apresentado como uma **leitura bruta entre 0 e 4095**.
+O firmware lê o LDR com `analogRead` no GPIO35, com resolução de 12 bits (0 a 4095).
 
-Durante os testes:
+**Módulo anterior:** a saída ficava próxima de 0 com luz e chegava a 4095 com o sensor coberto, quase sem valores intermediários. A transição abrupta indicava que o módulo funcionava como comparador (saída `DO`), sem resposta proporcional à luz.
 
-- Com iluminação, os valores ficaram próximos de 0;
-- Com o sensor completamente coberto, a leitura chegou a 4095;
-- A transição ocorreu de forma abrupta, sem variação gradual confiável.
+**Módulo atual (08/10/2026):** a leitura varia de forma gradual conforme a iluminação. Com isso, passou a ser possível converter o valor em uma estimativa de iluminância.
 
-O módulo observado possui saída `DO`. Ler essa saída com o ADC não a transforma em uma saída analógica proporcional à luz.
+A conversão é linear, entre dois pontos de referência observados:
 
-A equipe decidiu manter a leitura bruta nesta versão. **O valor exibido não representa lux nem uma medição calibrada de luminosidade.**
+| Leitura do ADC | Iluminância estimada |
+|---:|---:|
+| 3358 | 0 lux |
+| 0 | 120000 lux |
 
-Para obter uma resposta gradual, será necessário revisar o circuito ou utilizar uma saída analógica apropriada e realizar sua calibração.
+```text
+lux estimado = 120000 × (3358 − leitura) ÷ 3358
+```
+
+**Esse valor é uma estimativa.** Ele não foi calibrado com luxímetro, e a resposta real de um LDR não é linear. Use-o para acompanhar variações de claro e escuro, não como medição precisa.
+
+A dashboard foi ajustada para exibir a unidade lux, o texto "iluminância estimada" e o limite de 120000. A exibição dos valores recebidos ainda será conferida.
 
 ### Velocidade do vento
 
@@ -149,6 +201,8 @@ O firmware calcula o ângulo relativo e apresenta uma das oito direções:
 
 O cálculo considera **80 passos por volta**, quantidade que ainda precisa ser confirmada com uma volta física completa.
 
+A bússola da dashboard ainda precisa ser conferida com o movimento real da biruta.
+
 Como o encoder é incremental, a referência deve ser restabelecida após reiniciar ou reposicionar o conjunto. A calibração depende do alinhamento realizado pela pessoa que opera a estação; o sensor não identifica sozinho o Norte geográfico.
 
 ### LCD e botões frontais
@@ -156,8 +210,8 @@ Como o encoder é incremental, a referência deve ser restabelecida após reinic
 O LCD 16x2 apresenta uma animação de abertura com o nome **AEOLUS** e três páginas de informações:
 
 1. Velocidade e direção do vento;
-2. Temperatura, umidade e leitura bruta do LDR;
-3. Hora e data.
+2. Temperatura, umidade e luminosidade;
+3. Hora e data (relógio sincronizado por NTP).
 
 | Controle | Função |
 |---|---|
@@ -170,7 +224,9 @@ Não há alternância automática das páginas nesta versão.
 
 Desligar o LCD não interrompe a leitura dos sensores nem a comunicação da estação.
 
-O relógio utiliza a data e a hora de compilação como referência. Não há sincronização NTP nesta implementação.
+O relógio é sincronizado por NTP no fuso UTC−3 (horário de Brasília), o que exige conexão com a internet. Esse ajuste foi verificado na estação em 08/10/2026. Sem rede, o horário pode não ser atualizado.
+
+O texto usado para a luminosidade no LCD ainda precisa ser conferido na estação.
 
 ### LED RGB e Escala Aeolus
 
@@ -191,6 +247,18 @@ As cores amarela e laranja foram retiradas após os testes físicos. A dashboard
 Como a dashboard recebe amostras por MQTT, pode haver diferença momentânea entre a classificação exibida e a cor local. Para garantir correspondência exata, uma melhoria possível é publicar também o estado escolhido pelo firmware.
 
 ## Arquitetura do sistema
+
+```mermaid
+flowchart LR
+    S[Sensores<br/>DHT22 · LDR · 2 encoders] --> E[ESP32]
+    E --> L[LCD + LED RGB]
+    E -->|Wi-Fi| M[(Broker MQTT)]
+    M -->|tempo real| D[Dashboard]
+    M --> B[Backend Node.js]
+    B --> P[(PostgreSQL)]
+    P --> A[API]
+    A -->|histórico| D
+```
 
 O ESP32 realiza as leituras, atualiza o LCD e controla o RGB. Pela rede Wi-Fi, publica os dados no broker MQTT.
 
@@ -215,13 +283,13 @@ Configurações utilizadas durante o desenvolvimento:
 | Tópico | `aeolus/sensor/dados` |
 | Conexão da dashboard | `wss://broker.hivemq.com:8884/mqtt` |
 
-Exemplo ilustrativo do formato de mensagem documentado no projeto:
+Exemplo ilustrativo (valores fictícios) do formato de mensagem documentado no projeto:
 
 ```json
 {
   "temperatura": 24.5,
   "umidade": 57.1,
-  "luminosidade": 4095,
+  "luminosidade": 18500,
   "velocidade": 0.96,
   "angulo": 45,
   "direcao": "Nordeste",
@@ -253,6 +321,8 @@ A tabela documentada no projeto é `leituras_aeolus`:
 
 Os campos de estado do Wi-Fi e do MQTT não fazem parte dessa estrutura documentada.
 
+**Atenção:** `luminosidade` é `INTEGER`. Com a estimativa em lux (até 120000), é preciso conferir se os valores recebidos, inclusive decimais, são gravados corretamente. Se necessário, o firmware deve arredondar o valor ou a coluna deve ser alterada.
+
 ### API
 
 Endereço local utilizado:
@@ -270,11 +340,12 @@ Endpoints descritos na documentação do backend:
 
 O gráfico da dashboard consulta a API a cada **cinco segundos** e utiliza até **30 leituras recentes**.
 
-O fluxo de persistência já funcionou em etapas anteriores. Na versão atual, ainda é necessário conferir:
+O fluxo de persistência já funcionou em etapas anteriores. Em 08/10/2026, `GET /api/status` retornou servidor online e banco conectado, e o gráfico voltou a atualizar, conforme relato da equipe.
 
-- Recebimento das novas mensagens pelo backend;
-- Gravação dos registros no PostgreSQL;
-- Resposta da API;
+Ainda é necessário conferir:
+
+- Novos IDs e horários em `GET /api/leituras`;
+- Gravação da luminosidade em lux;
 - Valores, ordem e horários exibidos no gráfico.
 
 ## Estrutura do projeto
@@ -322,7 +393,7 @@ O PlatformIO compila todos os arquivos `.cpp` dentro de `src`. Por isso, os test
 - Node.js e npm;
 - PostgreSQL em execução;
 - Banco de dados e tabela preparados;
-- Rede Wi-Fi disponível para o ESP32;
+- Rede Wi-Fi com acesso à internet para o ESP32 (necessária para o relógio NTP);
 - Acesso ao broker MQTT.
 
 ### 1. Obter o projeto
@@ -434,25 +505,34 @@ A validação seguiu a sequência:
 | Item | Resultado registrado em 07/10/2026 |
 |---|---|
 | DHT22 | Leitura isolada de temperatura e umidade confirmada |
-| LDR | Leitura bruta confirmada, com resposta próxima aos extremos |
+| LDR | 07/10: leitura bruta, com resposta próxima aos extremos. 08/10: novo módulo com resposta gradual |
 | Anemômetro | Giro, cálculo de velocidade, parada e SW19 testados |
 | Biruta | Dois sentidos de rotação, SW22, ângulo e direção testados |
 | RGB | Canais e cores azul, ciano, verde e vermelho testados |
 | LCD | Comunicação I2C, texto, animação e controle local testados |
 | Firmware integrado | Funcionamento geral confirmado pela equipe |
-| Dashboard | Interface e regras de leitura atualizadas |
-| Banco e histórico | Funcionamento anterior; revisão da versão atual pendente |
+| Relógio NTP (UTC−3) | Verificado na estação em 08/10 |
+| API | 08/10: `/api/status` com servidor online e banco conectado |
+| Gráfico da dashboard | 08/10: atualizando, conforme relato |
+| Dashboard | Interface e regras de leitura atualizadas; lux ajustado em 08/10, exibição a conferir |
+| Banco e histórico | Funcionamento anterior; continuidade da gravação a conferir |
 | Versionamento | Integração enviada à `main` |
 
 Os testes de bancada demonstram o comportamento funcional observado. Eles não substituem a calibração das medições nem um teste prolongado de estabilidade.
 
+---
+
 ## Limitações e próximos passos
 
-- [ ] Conferir o fluxo MQTT → backend → PostgreSQL → histórico com a versão atual;
-- [ ] Verificar datas, horários, ordem e valores dos registros no gráfico;
+- [ ] Conferir novos IDs e horários em `/api/leituras`;
+- [ ] Conferir a gravação da luminosidade em lux (coluna `INTEGER`);
+- [ ] Conferir a luminosidade na dashboard;
+- [ ] Testar a bússola com a biruta;
+- [ ] Conferir o texto de luminosidade no LCD;
 - [ ] Confirmar a quantidade de passos por volta dos encoders;
 - [ ] Comparar a velocidade calculada com uma referência física;
-- [ ] Revisar o circuito do LDR para obter resposta gradual de luminosidade;
+- [ ] Calibrar a estimativa de lux com um luxímetro;
+- [ ] Imprimir e montar a base final da caixa e o suporte da biruta;
 - [ ] Consolidar a configuração do backend e a criação do banco;
 - [ ] Realizar testes prolongados de estabilidade e reconexão.
 
@@ -486,6 +566,12 @@ O LED respondeu com polaridade diferente da registrada inicialmente. O teste de 
 
 A compilação de todos os arquivos `.cpp` dentro de `src` provocou uma colisão entre objetos com o mesmo nome. A correção reforçou a importância de manter os testes isolados e evitar definições globais duplicadas.
 
+### LDR e relógio
+
+O primeiro módulo de luminosidade só indicava claro ou escuro. A troca por um módulo analógico permitiu uma leitura gradual e uma estimativa em lux.
+
+O relógio deixou de usar a hora de compilação e passou a usar NTP, em UTC−3.
+
 ### Leitura e calibração
 
 Receber um valor do ADC ou detectar movimento não significa que a grandeza física já esteja calibrada. A validação funcional e a verificação da precisão são etapas diferentes.
@@ -515,7 +601,7 @@ Em **7 de outubro de 2026**, foi concluída a integração:
 
 O envio ao GitHub foi confirmado, com a `main` local sincronizada com `origin/main` e sem alterações pendentes naquele momento.
 
-## Desenvolvimento
+## Autoria
 
 Projeto desenvolvido no **Vortex Lab — Universidade de Fortaleza**, como parte do Programa de Estágio em IoT.
 
