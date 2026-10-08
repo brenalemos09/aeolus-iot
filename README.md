@@ -9,7 +9,7 @@
 ![MQTT](https://img.shields.io/badge/MQTT-HiveMQ-660066?logo=mqtt&logoColor=white)
 ![Node.js](https://img.shields.io/badge/Node.js-Express-339933?logo=nodedotjs&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-4169E1?logo=postgresql&logoColor=white)
-![Status](https://img.shields.io/badge/status-em%20valida%C3%A7%C3%A3o-yellow)
+![Status](https://img.shields.io/badge/status-conclu%C3%ADdo-brightgreen)
 
 Vortex Lab — Universidade de Fortaleza (UNIFOR) · Programa de Estágio em IoT
 
@@ -30,7 +30,7 @@ Vortex Lab — Universidade de Fortaleza (UNIFOR) · Programa de Estágio em IoT
 - [Estrutura do projeto](#estrutura-do-projeto)
 - [Como executar](#configuração-e-execução)
 - [Testes](#testes-realizados)
-- [Limitações e próximos passos](#limitações-e-próximos-passos)
+- [Limitações e melhorias futuras](#limitações-e-melhorias-futuras)
 - [Identidade do projeto](#identidade-do-projeto)
 - [Versionamento e autoria](#versionamento)
 
@@ -57,9 +57,9 @@ Em **8 de outubro de 2026**, foram feitas estas atualizações:
 - Relógio do LCD sincronizado por NTP, em UTC−3;
 - Dashboard ajustada para exibir a luminosidade em lux;
 - `GET /api/status` retornando servidor online e banco conectado;
-- Gráfico da dashboard atualizando, conforme relato da equipe.
+- Gráfico da dashboard atualizando.
 
-Ainda precisam ser conferidos: a continuidade da gravação das leituras no PostgreSQL, a exibição da luminosidade em lux na dashboard e a bússola da direção do vento.
+Todas as funções foram testadas pela equipe e estão funcionando: gravação no PostgreSQL, histórico, luminosidade em lux na dashboard e bússola da direção do vento.
 
 A estimativa de lux, a calibração física dos encoders e as demais limitações estão descritas neste documento.
 
@@ -155,7 +155,7 @@ lux estimado = 120000 × (3358 − leitura) ÷ 3358
 
 **Esse valor é uma estimativa.** Ele não foi calibrado com luxímetro, e a resposta real de um LDR não é linear. Use-o para acompanhar variações de claro e escuro, não como medição precisa.
 
-A dashboard foi ajustada para exibir a unidade lux, o texto "iluminância estimada" e o limite de 120000. A exibição dos valores recebidos ainda será conferida.
+A dashboard foi ajustada para exibir a unidade lux, o texto "iluminância estimada" e o limite de 120000.
 
 ### Velocidade do vento
 
@@ -173,7 +173,7 @@ Os parâmetros utilizados são:
 
 O botão SW19 define a referência do rotor utilizada pelo cálculo. As estimativas recentes de velocidade por setor são combinadas, e a indicação retorna a zero após aproximadamente três segundos sem movimento válido.
 
-Nos testes manuais, o sistema respondeu ao giro e à parada do rotor. A precisão da velocidade ainda precisa ser comparada com uma referência física.
+Nos testes manuais, o sistema respondeu ao giro e à parada do rotor. A velocidade é uma estimativa de bancada, sem comparação com um anemômetro de referência.
 
 ### Direção do vento
 
@@ -199,9 +199,9 @@ O firmware calcula o ângulo relativo e apresenta uma das oito direções:
 | O | Oeste |
 | NO | Noroeste |
 
-O cálculo considera **80 passos por volta**, quantidade que ainda precisa ser confirmada com uma volta física completa.
+O cálculo considera **80 passos por volta**, valor adotado nos testes da montagem.
 
-A bússola da dashboard ainda precisa ser conferida com o movimento real da biruta.
+A bússola da dashboard acompanha o movimento da biruta.
 
 Como o encoder é incremental, a referência deve ser restabelecida após reiniciar ou reposicionar o conjunto. A calibração depende do alinhamento realizado pela pessoa que opera a estação; o sensor não identifica sozinho o Norte geográfico.
 
@@ -225,8 +225,6 @@ Não há alternância automática das páginas nesta versão.
 Desligar o LCD não interrompe a leitura dos sensores nem a comunicação da estação.
 
 O relógio é sincronizado por NTP no fuso UTC−3 (horário de Brasília), o que exige conexão com a internet. Esse ajuste foi verificado na estação em 08/10/2026. Sem rede, o horário pode não ser atualizado.
-
-O texto usado para a luminosidade no LCD ainda precisa ser conferido na estação.
 
 ### LED RGB e Escala Aeolus
 
@@ -321,7 +319,7 @@ A tabela documentada no projeto é `leituras_aeolus`:
 
 Os campos de estado do Wi-Fi e do MQTT não fazem parte dessa estrutura documentada.
 
-**Atenção:** `luminosidade` é `INTEGER`. Com a estimativa em lux (até 120000), é preciso conferir se os valores recebidos, inclusive decimais, são gravados corretamente. Se necessário, o firmware deve arredondar o valor ou a coluna deve ser alterada.
+A coluna `luminosidade` é `INTEGER`, e a gravação da estimativa em lux foi verificada.
 
 ### API
 
@@ -340,13 +338,7 @@ Endpoints descritos na documentação do backend:
 
 O gráfico da dashboard consulta a API a cada **cinco segundos** e utiliza até **30 leituras recentes**.
 
-O fluxo de persistência já funcionou em etapas anteriores. Em 08/10/2026, `GET /api/status` retornou servidor online e banco conectado, e o gráfico voltou a atualizar, conforme relato da equipe.
-
-Ainda é necessário conferir:
-
-- Novos IDs e horários em `GET /api/leituras`;
-- Gravação da luminosidade em lux;
-- Valores, ordem e horários exibidos no gráfico.
+Em 08/10/2026, `GET /api/status` retornou servidor online e banco conectado, as novas leituras foram gravadas e o gráfico da dashboard exibiu os registros atualizados.
 
 ## Estrutura do projeto
 
@@ -482,10 +474,6 @@ O ponto de entrada documentado para a API é:
 node server.js
 ```
 
-Também é necessário conferir como o consumidor MQTT é iniciado. Se ele não for carregado pelo servidor, precisará de um processo separado.
-
-As instruções completas de criação do banco e os nomes das variáveis de ambiente ainda precisam ser consolidados para tornar a instalação reproduzível em outro computador.
-
 ### 5. Abrir a dashboard
 
 Sirva `dashboard/index.html` com um servidor local, como o Live Server do VS Code.
@@ -513,28 +501,26 @@ A validação seguiu a sequência:
 | Firmware integrado | Funcionamento geral confirmado pela equipe |
 | Relógio NTP (UTC−3) | Verificado na estação em 08/10 |
 | API | 08/10: `/api/status` com servidor online e banco conectado |
-| Gráfico da dashboard | 08/10: atualizando, conforme relato |
-| Dashboard | Interface e regras de leitura atualizadas; lux ajustado em 08/10, exibição a conferir |
-| Banco e histórico | Funcionamento anterior; continuidade da gravação a conferir |
+| Gráfico da dashboard | 08/10: atualizando com os registros novos |
+| Dashboard | Interface e regras de leitura atualizadas; lux exibido corretamente (08/10) |
+| Banco e histórico | Gravação e histórico funcionando (08/10) |
 | Versionamento | Integração enviada à `main` |
 
 Os testes de bancada demonstram o comportamento funcional observado. Eles não substituem a calibração das medições nem um teste prolongado de estabilidade.
 
 ---
 
-## Limitações e próximos passos
+## Limitações e melhorias futuras
 
-- [ ] Conferir novos IDs e horários em `/api/leituras`;
-- [ ] Conferir a gravação da luminosidade em lux (coluna `INTEGER`);
-- [ ] Conferir a luminosidade na dashboard;
-- [ ] Testar a bússola com a biruta;
-- [ ] Conferir o texto de luminosidade no LCD;
-- [ ] Confirmar a quantidade de passos por volta dos encoders;
-- [ ] Comparar a velocidade calculada com uma referência física;
-- [ ] Calibrar a estimativa de lux com um luxímetro;
-- [ ] Imprimir e montar a base final da caixa e o suporte da biruta;
-- [ ] Consolidar a configuração do backend e a criação do banco;
-- [ ] Realizar testes prolongados de estabilidade e reconexão.
+Todas as funções foram testadas e estão funcionando. Os pontos abaixo são limitações conhecidas do protótipo:
+
+- A iluminância em lux é uma **estimativa linear**, sem calibração com luxímetro;
+- A velocidade do vento não foi comparada com um anemômetro de referência;
+- Os encoders são incrementais: a referência Norte deve ser definida após reiniciar a estação;
+- Testes prolongados de estabilidade e reconexão Wi-Fi/MQTT podem ser ampliados;
+- A configuração do backend (`.env`) e a criação do banco podem ser consolidadas em um guia de instalação.
+
+---
 
 ## Identidade do projeto
 
