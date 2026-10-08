@@ -114,9 +114,6 @@ int luminosidadeLCD = 0;
 float velocidadeLCD = 0;
 char direcaoLCD[17] = "Norte";
 
-time_t horaBaseLCD = 0;
-unsigned long millisBaseLCD = 0;
-
 struct BotaoLCD {
     int pino;
     int ultimaLeitura;
@@ -124,8 +121,13 @@ struct BotaoLCD {
     unsigned long ultimaMudanca;
 };
 
-BotaoLCD botaoTela = {BOTAO_TELA, HIGH, HIGH, 0};
-BotaoLCD botaoPagina = {BOTAO_PAGINA, HIGH, HIGH, 0};
+BotaoLCD botaoTela = {
+    BOTAO_TELA, HIGH, HIGH, 0
+};
+
+BotaoLCD botaoPagina = {
+    BOTAO_PAGINA, HIGH, HIGH, 0
+};
 
 bool foiPressionado(BotaoLCD& botao) {
     unsigned long agora = millis();
@@ -157,7 +159,10 @@ void exibirQuadro() {
 
     for (int linha = 0; linha < 2; linha++) {
         for (int coluna = 0; coluna < 16; coluna++) {
-            if (quadro[linha][coluna] == telaAtual[linha][coluna]) {
+            if (
+                quadro[linha][coluna] ==
+                telaAtual[linha][coluna]
+            ) {
                 continue;
             }
 
@@ -169,7 +174,9 @@ void exibirQuadro() {
             }
 
             lcd.write(quadro[linha][coluna]);
-            telaAtual[linha][coluna] = quadro[linha][coluna];
+
+            telaAtual[linha][coluna] =
+                quadro[linha][coluna];
 
             ultimaLinha = linha;
             ultimaColuna = coluna;
@@ -177,7 +184,10 @@ void exibirQuadro() {
     }
 }
 
-void escreverCentralizado(int linha, const char* texto) {
+void escreverCentralizado(
+    int linha,
+    const char* texto
+) {
     int tamanho = strlen(texto);
     int inicio = (16 - tamanho) / 2;
 
@@ -185,15 +195,25 @@ void escreverCentralizado(int linha, const char* texto) {
         inicio = 0;
     }
 
-    for (int i = 0; i < tamanho && inicio + i < 16; i++) {
+    for (
+        int i = 0;
+        i < tamanho && inicio + i < 16;
+        i++
+    ) {
         quadro[linha][inicio + i] = texto[i];
     }
 }
 
 void carregarLetrasAeolus() {
     byte* letras[8] = {
-        O_TOPO, O_BASE, U_TOPO, L_TOPO,
-        L_BASE, A_BASE, E_TOPO, S_BASE
+        O_TOPO,
+        O_BASE,
+        U_TOPO,
+        L_TOPO,
+        L_BASE,
+        A_BASE,
+        E_TOPO,
+        S_BASE
     };
 
     for (int i = 0; i < 8; i++) {
@@ -208,11 +228,15 @@ void montarNomeAeolus() {
     int colunaInicial = (16 - largura) / 2;
 
     for (int i = 0; i < 6; i++) {
-        int coluna = colunaInicial + i * (1 + ESPACO_LETRAS);
+        int coluna =
+            colunaInicial + i * (1 + ESPACO_LETRAS);
 
         if (coluna >= 0 && coluna < 16) {
-            nomeAeolus[0][coluna] = LETRAS_AEOLUS[i][0];
-            nomeAeolus[1][coluna] = LETRAS_AEOLUS[i][1];
+            nomeAeolus[0][coluna] =
+                LETRAS_AEOLUS[i][0];
+
+            nomeAeolus[1][coluna] =
+                LETRAS_AEOLUS[i][1];
         }
     }
 }
@@ -230,33 +254,6 @@ void efeitoRelampago() {
     lcd.backlight();
 }
 
-void ajustarRelogioCompilacao() {
-    const char* meses = "JanFebMarAprMayJunJulAugSepOctNovDec";
-    char mes[4];
-
-    int dia, ano, hora, minuto, segundo;
-
-    sscanf(__DATE__, "%3s %d %d", mes, &dia, &ano);
-    sscanf(__TIME__, "%d:%d:%d", &hora, &minuto, &segundo);
-
-    struct tm data = {};
-
-    data.tm_mon = (strstr(meses, mes) - meses) / 3;
-    data.tm_mday = dia;
-    data.tm_year = ano - 1900;
-    data.tm_hour = hora;
-    data.tm_min = minuto;
-    data.tm_sec = segundo;
-    data.tm_isdst = -1;
-
-    horaBaseLCD = mktime(&data);
-    millisBaseLCD = millis();
-}
-
-time_t obterHoraAtualLCD() {
-    return horaBaseLCD + (millis() - millisBaseLCD) / 1000;
-}
-
 void desenharPaginaVento() {
     limparQuadro();
 
@@ -271,6 +268,7 @@ void desenharPaginaVento() {
 
     escreverCentralizado(0, texto);
     escreverCentralizado(1, direcaoLCD);
+
     exibirQuadro();
 }
 
@@ -288,7 +286,7 @@ void desenharPaginaAmbiente() {
         umidadeLCD
     );
 
-    // Valor bruto, sem apresentar como lux.
+    // Leitura bruta do LDR, sem conversao para lux.
     snprintf(
         segundaLinha,
         sizeof(segundaLinha),
@@ -298,41 +296,60 @@ void desenharPaginaAmbiente() {
 
     escreverCentralizado(0, primeiraLinha);
     escreverCentralizado(1, segundaLinha);
+
     exibirQuadro();
 }
 
 void desenharPaginaRelogio() {
     limparQuadro();
 
-    time_t agora = obterHoraAtualLCD();
-    struct tm horario;
-    localtime_r(&agora, &horario);
+    // O wifi.cpp configura a sincronizacao NTP
+    // e o fuso de Fortaleza (UTC-3).
+    time_t agora = time(nullptr);
+    struct tm horario = {};
+
+    // Consulta imediata, sem esperar pela rede.
+    if (
+        localtime_r(&agora, &horario) == nullptr ||
+        horario.tm_year < (2024 - 1900)
+    ) {
+        escreverCentralizado(
+            0,
+            "Hora indisponivel"
+        );
+
+        escreverCentralizado(
+            1,
+            "Aguardando NTP"
+        );
+
+        exibirQuadro();
+        return;
+    }
 
     char hora[17];
     char data[17];
 
-    snprintf(
+    strftime(
         hora,
         sizeof(hora),
-        "%02d:%02d:%02d",
-        horario.tm_hour,
-        horario.tm_min,
-        horario.tm_sec
+        "%H:%M:%S",
+        &horario
     );
 
-    snprintf(
+    strftime(
         data,
         sizeof(data),
-        "%02d/%02d/%04d",
-        horario.tm_mday,
-        horario.tm_mon + 1,
-        horario.tm_year + 1900
+        "%d/%m/%Y",
+        &horario
     );
 
     escreverCentralizado(0, hora);
     escreverCentralizado(1, data);
+
     exibirQuadro();
 }
+
 } // namespace
 
 void limparLCD() {
@@ -357,16 +374,22 @@ void mostrarAberturaAeolus() {
 
     while (millis() - inicio < DURACAO_RAJADA) {
         int cabeca =
-            (millis() - inicio) * 28UL / DURACAO_RAJADA;
+            (millis() - inicio) * 28UL /
+            DURACAO_RAJADA;
 
         limparQuadro();
 
         for (int linha = 0; linha < 2; linha++) {
             for (int coluna = 0; coluna < 16; coluna++) {
-                int distancia = cabeca - 3 * linha - coluna;
+                int distancia =
+                    cabeca - 3 * linha - coluna;
 
-                if (distancia >= 0 && distancia < 8) {
-                    quadro[linha][coluna] = perfilVento[distancia];
+                if (
+                    distancia >= 0 &&
+                    distancia < 8
+                ) {
+                    quadro[linha][coluna] =
+                        perfilVento[distancia];
                 }
             }
         }
@@ -379,7 +402,13 @@ void mostrarAberturaAeolus() {
     lcd.noBacklight();
 
     carregarLetrasAeolus();
-    memcpy(quadro, nomeAeolus, sizeof(quadro));
+
+    memcpy(
+        quadro,
+        nomeAeolus,
+        sizeof(quadro)
+    );
+
     exibirQuadro();
 
     delay(150);
@@ -397,12 +426,16 @@ void mudarPaginaLCD() {
         return;
     }
 
-    paginaAtual = (paginaAtual + 1) % QUANTIDADE_PAGINAS;
+    paginaAtual =
+        (paginaAtual + 1) % QUANTIDADE_PAGINAS;
 
     limparLCD();
     atualizarTelaLCD();
 
-    Serial.printf("LCD: pagina %d de 3.\n", paginaAtual + 1);
+    Serial.printf(
+        "LCD: pagina %d de 3.\n",
+        paginaAtual + 1
+    );
 }
 
 void atualizarTelaLCD() {
@@ -410,7 +443,7 @@ void atualizarTelaLCD() {
         return;
     }
 
-    // Troca de pagina somente pelo botao GPIO23.
+    // A pagina muda somente pelo botao GPIO23.
     if (paginaAtual == 0) {
         desenharPaginaVento();
     } else if (paginaAtual == 1) {
@@ -450,9 +483,12 @@ void alternarEstadoLCD() {
 }
 
 void atualizarBotoesLCD() {
-    // Atualiza ambos antes de executar a animacao.
-    bool pressionouTela = foiPressionado(botaoTela);
-    bool pressionouPagina = foiPressionado(botaoPagina);
+    // Le ambos antes de executar a animacao.
+    bool pressionouTela =
+        foiPressionado(botaoTela);
+
+    bool pressionouPagina =
+        foiPressionado(botaoPagina);
 
     if (pressionouTela) {
         alternarEstadoLCD();
@@ -483,7 +519,10 @@ void mostrarDadosLCD(
     atualizarTelaLCD();
 }
 
-void mostrarDadosLCD(float temperatura, float umidade) {
+void mostrarDadosLCD(
+    float temperatura,
+    float umidade
+) {
     temperaturaLCD = temperatura;
     umidadeLCD = umidade;
 
@@ -499,21 +538,37 @@ void iniciarLCD() {
     pinMode(BOTAO_TELA, INPUT_PULLUP);
     pinMode(BOTAO_PAGINA, INPUT_PULLUP);
 
-    botaoTela.ultimaLeitura = digitalRead(BOTAO_TELA);
-    botaoTela.estadoEstavel = botaoTela.ultimaLeitura;
+    botaoTela.ultimaLeitura =
+        digitalRead(BOTAO_TELA);
+
+    botaoTela.estadoEstavel =
+        botaoTela.ultimaLeitura;
+
     botaoTela.ultimaMudanca = millis();
 
-    botaoPagina.ultimaLeitura = digitalRead(BOTAO_PAGINA);
-    botaoPagina.estadoEstavel = botaoPagina.ultimaLeitura;
+    botaoPagina.ultimaLeitura =
+        digitalRead(BOTAO_PAGINA);
+
+    botaoPagina.estadoEstavel =
+        botaoPagina.ultimaLeitura;
+
     botaoPagina.ultimaMudanca = millis();
 
     lcdLigado = true;
     paginaAtual = 0;
 
-    ajustarRelogioCompilacao();
     mostrarAberturaAeolus();
     atualizarTelaLCD();
 
-    Serial.println("LCD: direita GPIO32 = liga/desliga.");
-    Serial.println("LCD: esquerda GPIO23 = passa pagina.");
+    Serial.println(
+        "LCD: direita GPIO32 = liga/desliga."
+    );
+
+    Serial.println(
+        "LCD: esquerda GPIO23 = passa pagina."
+    );
+
+    Serial.println(
+        "LCD: relogio usa horario do sistema via NTP."
+    );
 }

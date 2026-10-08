@@ -270,8 +270,7 @@ function lerDadosDHT(dados) {
         temperatura !== null &&
         umidade !== null;
 
-    // O módulo atual usa -1 como retorno de erro.
-    // Com status explicitamente true, -1 °C pode ser válido.
+    // Sem status informado, -1 representa erro no módulo atual.
     if (statusInformado === null && temperatura === -1) {
         valido = false;
     }
@@ -331,7 +330,6 @@ function obterClassificacao(velocidade) {
         };
     }
 
-    // Mesma regra de transição do rgb.cpp.
     while (
         faixaAtual < faixasVento.length - 1 &&
         velocidade > limitesVento[faixaAtual] * (1 + histereseVento)
@@ -382,8 +380,6 @@ function atualizarInterface() {
 
     mostrarNumero(elementos.temperatura, temperatura);
     mostrarNumero(elementos.umidade, umidade);
-
-    // Duas casas para visualizar melhor as velocidades pequenas.
     mostrarNumero(elementos.velocidade, velocidade, 2);
 
     elementos.luminosidade.textContent =
@@ -430,10 +426,11 @@ function receberDados(mensagem) {
     dadosAtuais.temperatura = dht.temperatura;
     dadosAtuais.umidade = dht.umidade;
 
+    // O ESP32 já envia a luminosidade convertida.
     dadosAtuais.luminosidade = numeroNoIntervalo(
         dados.luminosidade,
         0,
-        4095
+        120000
     );
 
     const velocidade = numeroValido(dados.velocidade);
@@ -542,7 +539,6 @@ async function carregarHistorico() {
             throw new Error("Formato inesperado do histórico.");
         }
 
-        // Ordena por data, mesmo se a API retornar do mais novo ao mais antigo.
         const ultimasLeituras = leituras
             .filter(leitura =>
                 leitura !== null &&
@@ -611,7 +607,6 @@ setInterval(function () {
 
     if (Date.now() - ultimaMensagem > limiteOffline) {
         dadosExpirados = true;
-
         atualizarStatus("Sem dados recentes", "offline");
         atualizarInterface();
     }

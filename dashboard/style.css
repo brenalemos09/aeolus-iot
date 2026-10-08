@@ -13,7 +13,6 @@
     --verde: #096e2e;
     --vermelho: #dc2626;
 
-    /* Cores correspondentes ao RGB do projeto. */
     --parado: #94a3b8;
     --aura: #2563eb;
     --zefiro: #06b6d4;
@@ -206,6 +205,14 @@ body {
     font-weight: 600;
 }
 
+.luminosidade-card .valor {
+    flex-wrap: wrap;
+}
+
+.luminosidade-card .valor strong {
+    font-size: clamp(2rem, 4vw, 3rem);
+}
+
 .leitura > p,
 .calibracao {
     color: var(--texto-suave);
@@ -233,7 +240,6 @@ body {
     text-align: right;
 }
 
-/* O script pode definir data-nivel no card do vento. */
 .vento-card[data-nivel="parado"]::before {
     background: var(--parado);
 }

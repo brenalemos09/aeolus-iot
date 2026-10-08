@@ -37,7 +37,7 @@ void imprimirLeituras() {
     );
 
     Serial.printf(
-        "LDR bruto: %d\n",
+        "Luminosidade estimada: %d lux\n",
         luminosidadeAtual
     );
 
@@ -108,7 +108,7 @@ void loop() {
 
         imprimirLeituras();
 
-        // Mantem a assinatura MQTT do seu main original.
+        // Luminosidade ja convertida pelo ldr.cpp.
         publicarDadosMQTT(
             temperaturaAtual,
             umidadeAtual,
