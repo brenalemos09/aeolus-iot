@@ -591,4 +591,4 @@ O envio ao GitHub foi confirmado, com a `main` local sincronizada com `origin/ma
 
 Projeto desenvolvido no **Vortex Lab — Universidade de Fortaleza**, como parte do Programa de Estágio em IoT.
 
-A integração final foi realizada por Brena, em colaboração com Marianna, preservando a lógica original dos encoders e ajustando os módulos conforme os resultados dos testes físicos.
+A integração final foi realizada por Brena Lemos e Marianna Holanda, preservando a lógica original dos encoders e ajustando os módulos conforme os resultados dos testes físicos.
